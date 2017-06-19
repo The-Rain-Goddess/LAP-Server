@@ -1,11 +1,12 @@
 package com.rain.app.server.redux;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
@@ -15,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.rain.app.server.redux.gui.MainWindow;
 import com.rain.app.server.redux.logger.MyLogger;
 import com.rain.app.service.riot.api.ApiConfig;
 import com.rain.app.service.riot.api.RiotApi;
@@ -23,50 +25,63 @@ import com.rain.app.service.riot.api.endpoints.constants.dto.Champion;
 import com.rain.app.service.riot.api.endpoints.constants.dto.ChampionList;
 import com.rain.app.service.riot.constant.Platform;
 
-public class Server {
+public class ServerRedux {
 //Package Varriables	
 	private static final Map<String, SummonerData> summonerDataStorage = Collections.synchronizedSortedMap(new TreeMap<String, SummonerData>());
 	private static final ExecutorService dataRetrievalPool = new ThreadPoolExecutor(1, 100, 10000L, TimeUnit.MILLISECONDS, new RateLimitingQueue(5000, 8, 10000L, 1));
 	private static ChampionList championTranslationList;
-	private boolean running = true;
+	private static boolean running = true;
 	private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+	private final int PORT_NUMBER = 48868;
+	private static ServerSocket ss = null;
 	
 //MAIN	
 	public static void main(String[] args) throws IOException{
 		MyLogger.setup();
-		final int PORT_NUMBER = 48868;
-		new Server(PORT_NUMBER);
+		new ServerRedux();
+		
+		
 	}
 
 //constructor	
-	public Server(final int PORT_NUMBER) throws IOException{
+	public ServerRedux() throws IOException{
 		championTranslationList = getChampionDataList();
 		log("Server: Champion translation list succesfully retrieved.");
 		log("Server: Server Started");
-		ServerSocket ss = null;
 		ExecutorService executor = null;
+		
 		try{
 			log("Server: [" + Thread.currentThread().getName() + "] is started.");
 			executor = Executors.newCachedThreadPool();
 			
+			executor.submit(() -> {
+				new MainWindow().begin(new String[0]);
+			});	
+			
 			ss = new ServerSocket(PORT_NUMBER);
+			System.out.println("Server Started");
 			while(running){
 				Socket serviceSocket = ss.accept();
 				log("Server: Accepted from " + serviceSocket.getInetAddress());
 				ClientHandler c = new ClientHandler(serviceSocket);
 				executor.submit(c);
-			} executor.shutdown();
+			} 
+			
+			executor.shutdown();
 			Thread.sleep(5000L);
+		} catch(SocketException e){
+			System.out.println("Server Socket was closed.");
 		} catch(IOException e){
 			e.printStackTrace();
 		} catch(InterruptedException e){
+			System.out.println("Thread " + Thread.currentThread().getName() + " was interrupted.");
 			e.printStackTrace();
 		} finally{
 			log("Server: Server shutting down");
-			saveDataToText();
-			
 			executor.shutdownNow();
-			ss.close();
+			System.out.println("Server Ended");
+			javafx.application.Platform.exit();
+			//System.exit(0);
 		}
 	}
 
@@ -93,28 +108,7 @@ public class Server {
 	
 	private static void log(Level level, String msg, Exception e){
 		LOGGER.log(level, msg, e);
-	}
-	
-	private boolean saveDataToText(){
-		try{
-			PrintWriter pw = new PrintWriter("backup.txt");
-			synchronized(summonerDataStorage){
-				System.err.println("Server: Exported Data");
-				for(Map.Entry<String, SummonerData> entry : summonerDataStorage.entrySet()){
-					String tmp = entry.getValue().toString();
-					System.out.println("Server: " + tmp);
-					pw.println(entry.getKey() + ": ");
-					pw.println("Two: " + tmp);
-					pw.flush();
-				}
-			} pw.close();
-		} catch(IOException e){
-			e.printStackTrace();
-		} finally{
-			
-		} return true;
-	}
-	
+	}	
 	
 //non-private a/m
 	public static String getChampionNameFromId(long champId){
@@ -124,9 +118,29 @@ public class Server {
 		return null;
 	}
 	
+	public static List<SummonerData> getSummonerDataStorageAsList(){
+		List<SummonerData> data = new ArrayList<>();
+		for(Map.Entry<String, SummonerData> entry : summonerDataStorage.entrySet()){
+			data.add(entry.getValue());
+		} return data;
+	}
+	
 	public static ChampionList getChampionTranslationList(){ return championTranslationList; }
 	
 	public static Map<String, SummonerData> getSummonerDataStorage(){ return summonerDataStorage; }
 	
 	public static ExecutorService getDataRetrievalPool(){ return dataRetrievalPool; }
+	
+	public static boolean isRunning(){ return running; }
+	
+	public static void stopRunning(){ 
+		running = false;
+		try {
+			ss.close();
+		} catch(SocketException e){
+			System.out.println("Socket Closed.");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

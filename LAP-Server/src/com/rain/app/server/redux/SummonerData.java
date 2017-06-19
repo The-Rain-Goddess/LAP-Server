@@ -330,5 +330,5 @@ public class SummonerData {
 	
 	public Map<Integer, List<AggregatedChampionData>> getRankedAnalysis(){ return this.rankedChampionDataMap; }
 	
-	
+	public List<Match> getMatchList(){ return matchList; }
 }
