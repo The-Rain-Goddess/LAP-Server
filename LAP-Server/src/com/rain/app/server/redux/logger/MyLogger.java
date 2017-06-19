@@ -29,8 +29,8 @@ public class MyLogger {
             }
 
             logger.setLevel(Level.ALL);
-            fileTxt = new FileHandler("Logging.txt");
-            fileHTML = new FileHandler("Logging.html");
+            fileTxt = new FileHandler("log/Logging.txt");
+            fileHTML = new FileHandler("log/Logging.html");
 
             // create a TXT formatter
             formatterTxt = new SimpleFormatter();
