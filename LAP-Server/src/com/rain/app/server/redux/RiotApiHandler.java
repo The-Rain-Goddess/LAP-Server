@@ -60,7 +60,7 @@ public class RiotApiHandler {
 //private mutators	
 	private Object evaluateFromFuture(Method method, Object... args){
 		try {
-			Future<Object> future = Server.getDataRetrievalPool().submit(new FutureTask<Object>(api, method, args));
+			Future<Object> future = ServerRedux.getDataRetrievalPool().submit(new FutureTask<Object>(api, method, args));
 			return future.get();
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
@@ -76,7 +76,7 @@ public class RiotApiHandler {
 	}
 	
 	private boolean isSummonerExistent(){
-		return (Server.getSummonerDataStorage().containsKey(summonerName));
+		return (ServerRedux.getSummonerDataStorage().containsKey(summonerName));
 	}
 	
 	private boolean isSummonerCurrent() throws InterruptedException, ExecutionException, NoSuchMethodException, SecurityException{
@@ -88,7 +88,7 @@ public class RiotApiHandler {
 	}
 
 	private long mostRecentMatchInMemoryId(){
-		return Server.getSummonerDataStorage().get(summonerName).getMostRecentMatchId();
+		return ServerRedux.getSummonerDataStorage().get(summonerName).getMostRecentMatchId();
 	}
 	
 	@SuppressWarnings("unused")
@@ -102,7 +102,7 @@ public class RiotApiHandler {
 
 	private SummonerData getSummonerDataFromStorage(String keyName){
 		log("RiotApiHandler: Retrieving old summoner data...");
-		return Server.getSummonerDataStorage().get(keyName);
+		return ServerRedux.getSummonerDataStorage().get(keyName);
 	}
 	
 	private int getNumberOfNewMatches(List<MatchReference> matchReferences){
@@ -120,7 +120,7 @@ public class RiotApiHandler {
 	}
 	
 	private void updateMatchReferences(MatchReferenceList mrl){
-		Server.getSummonerDataStorage().get(summonerName).setMatchReferenceList(mrl);
+		ServerRedux.getSummonerDataStorage().get(summonerName).setMatchReferenceList(mrl);
 	}
 	
 	private void updateMatches(MatchReferenceList mrl) throws NoSuchMethodException, SecurityException{
@@ -128,19 +128,19 @@ public class RiotApiHandler {
 		int numberOfNewMatchesToAdd = getNumberOfNewMatches(matchReferences);
 		for(int i = numberOfNewMatchesToAdd; i > 0 ; i--){
 			log("RiotApiHandler: Retrieving match: " + matchReferences.get(i).getGameId() + "...");
-			Server.getSummonerDataStorage().get(summonerName).addMatch(getMatch(matchReferences.get(i).getGameId()), true);
+			ServerRedux.getSummonerDataStorage().get(summonerName).addMatch(getMatch(matchReferences.get(i).getGameId()), true);
 			log("RiotApiHandler: Successfully retrieved match: " + matchReferences.get(i).getGameId() + ".");
 		}
 	}
 	
 	private void updateProfileData() throws NoSuchMethodException, SecurityException{
-		Server.getSummonerDataStorage().get(summonerName).setLeagueMap(getLeagueMap());
-		Server.getSummonerDataStorage().get(summonerName).setChampionMasteryList(getChampionMastery());
+		ServerRedux.getSummonerDataStorage().get(summonerName).setLeagueMap(getLeagueMap());
+		ServerRedux.getSummonerDataStorage().get(summonerName).setChampionMasteryList(getChampionMastery());
 	}
 	
 	private void updateRankedData(){
 		log("RiotApiHandler: Updating ranked data...");
-		Server.getSummonerDataStorage().get(summonerName).updateAnalysis();
+		ServerRedux.getSummonerDataStorage().get(summonerName).updateAnalysis();
 		log("RiotApiHandler: Successfully updated ranked data.");
 	}
 	
@@ -184,7 +184,7 @@ public class RiotApiHandler {
 			e.printStackTrace();
 		}
 		log("RiotApiHandler: Successfully updated old summoner data.");
-		return Server.getSummonerDataStorage().get(summonerName);
+		return ServerRedux.getSummonerDataStorage().get(summonerName);
 	}
 	
 	private SummonerData createSummoner(){
@@ -199,7 +199,7 @@ public class RiotApiHandler {
 			log("RiotApiHandler: League map: \n" + ServerUtilities.mapToString(newSummoner.setLeagueMap(getLeagueMap()).getLeagueMap()));
 			log("RiotApiHandler: Attempting to retrieve updated analysis data...");
 			log("RiotApiHandler: Ranked Analysis: \n" + ServerUtilities.mapOfListsToString(newSummoner.updateAnalysis().getRankedAnalysis()));
-			Server.getSummonerDataStorage().put(summonerName, newSummoner);
+			ServerRedux.getSummonerDataStorage().put(summonerName, newSummoner);
 			log("RiotApiHandler: SummonerData->" + summonerName + " was successfully added to storage.");
 		} catch (NoSuchMethodException | SecurityException | InterruptedException | ExecutionException e) {
 			e.printStackTrace();
@@ -212,7 +212,7 @@ public class RiotApiHandler {
 
 //non-private accessors/mutators	
 	public SummonerData getSummonerData(String key){
-		return Server.getSummonerDataStorage().get(key);
+		return ServerRedux.getSummonerDataStorage().get(key);
 	}
 	
 	public SummonerData getLocalSummonerData(){ return summonerData; }

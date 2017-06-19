@@ -59,7 +59,7 @@ public class SummonerData {
 			Participant player = match.getParticipants().get(i);
 			Player pIdentity = match.getParticipantIdentities().get(i).getPlayer();
 			String stats = 	getMatchDetails(player.getStats(), matchReferenceList.getMatches().get(matchIndex)) +
-							"champion:" + Server.getChampionNameFromId(player.getChampionId()) + "/" + 
+							"champion:" + ServerRedux.getChampionNameFromId(player.getChampionId()) + "/" + 
 							getSummonerSpellIds(player) + 
 							getMatchPeripherals(match) + 
 							"summonerId: " + pIdentity.getSummonerId() + "/";;
@@ -205,7 +205,7 @@ public class SummonerData {
 		System.out.println(championMasteryList.getChampionMasteries().size());
 		for(int i = 0; i < numberOfMasteriesToRetrieve && i < championMasteryList.getChampionMasteries().size(); i++){
 			ChampionMastery cm = championMasteryList.getChampionMasteries().get(i);
-			tmp = 	Server.getChampionNameFromId(cm.getChampionId()) + ":" +
+			tmp = 	ServerRedux.getChampionNameFromId(cm.getChampionId()) + ":" +
 					Long.toString(cm.getChampionLevel()) + ":" +
 					Long.toString(cm.getChampionPoints()); 
 			championMasterySummary.add(tmp);

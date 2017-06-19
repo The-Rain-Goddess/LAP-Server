@@ -44,7 +44,7 @@ public class AggregatedChampionData extends Object{
 						"totalSessionsLost:" + ps.getLosses() + "/" +
 						"totalSessionsWon:" + ps.getWins() + "/" +
 						"assists:" + ps.getAssists() + "/" + 
-						"champ:" + Server.getChampionNameFromId(championId) + "/" + 
+						"champ:" + ServerRedux.getChampionNameFromId(championId) + "/" + 
 						"champLevel:" + ps.getChampLevel() + "/" + 
 						"cs:" + (ps.getTotalMinionsKilled() + ps.getNeutralMinionsKilledEnemyJungle() + ps.getNeutralMinionsKilledTeamJungle()) + "/" +
 						"deaths:" + ps.getDeaths() + "/" + 		  
