@@ -29,6 +29,7 @@ public class ServerRedux {
 //Package Varriables	
 	private static final Map<String, SummonerData> summonerDataStorage = Collections.synchronizedSortedMap(new TreeMap<String, SummonerData>());
 	private static final ExecutorService dataRetrievalPool = new ThreadPoolExecutor(1, 100, 10000L, TimeUnit.MILLISECONDS, new RateLimitingQueue(5000, 8, 10000L, 1));
+	private ExecutorService clientHandlerService;
 	private static ChampionList championTranslationList;
 	private static boolean running = true;
 	private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
@@ -38,9 +39,7 @@ public class ServerRedux {
 //MAIN	
 	public static void main(String[] args) throws IOException{
 		MyLogger.setup();
-		new ServerRedux();
-		
-		
+		new ServerRedux().start();
 	}
 
 //constructor	
@@ -48,41 +47,65 @@ public class ServerRedux {
 		championTranslationList = getChampionDataList();
 		log("Server: Champion translation list succesfully retrieved.");
 		log("Server: Server Started");
-		ExecutorService executor = null;
-		
+		clientHandlerService = null;
+	}
+	
+	private void start(){
 		try{
 			log("Server: [" + Thread.currentThread().getName() + "] is started.");
-			executor = Executors.newCachedThreadPool();
-			
-			executor.submit(() -> {
-				new MainWindow().begin(new String[0]);
-			});	
-			
-			ss = new ServerSocket(PORT_NUMBER);
-			System.out.println("Server Started");
+			setupExecutors();
+			setupServerSocket();
 			while(running){
-				Socket serviceSocket = ss.accept();
-				log("Server: Accepted from " + serviceSocket.getInetAddress());
-				ClientHandler c = new ClientHandler(serviceSocket);
-				executor.submit(c);
-			} 
-			
-			executor.shutdown();
-			Thread.sleep(5000L);
+				handleClients();
+			} shutdownExecutors();
+			suspend(5000L);
 		} catch(SocketException e){
 			System.out.println("Server Socket was closed.");
 		} catch(IOException e){
 			e.printStackTrace();
-		} catch(InterruptedException e){
-			System.out.println("Thread " + Thread.currentThread().getName() + " was interrupted.");
-			e.printStackTrace();
 		} finally{
-			log("Server: Server shutting down");
-			executor.shutdownNow();
-			System.out.println("Server Ended");
-			javafx.application.Platform.exit();
-			//System.exit(0);
+			shutdownServer();
 		}
+	}
+	
+	private void setupExecutors(){
+		clientHandlerService = Executors.newCachedThreadPool();
+		
+		clientHandlerService.submit(() -> {
+			new MainWindow().begin(new String[0]);
+		});
+	}
+	
+	private void setupServerSocket() throws IOException{
+		ss = new ServerSocket(PORT_NUMBER);
+		System.out.println("Server Started");
+	}
+	
+	private void handleClients() throws SocketException, IOException{
+		Socket serviceSocket = ss.accept();
+		log("Server: Accepted from " + serviceSocket.getInetAddress());
+		ClientHandler c = new ClientHandler(serviceSocket);
+		clientHandlerService.submit(c);
+	}
+	
+	private void shutdownExecutors(){
+		clientHandlerService.shutdown();
+	}
+	
+	private void suspend(long millis){
+		try{
+			Thread.sleep(millis);
+		} catch(InterruptedException e){
+			e.printStackTrace();
+		}
+	}
+	
+	private void shutdownServer(){
+		log("Server: Server shutting down");
+		clientHandlerService.shutdownNow();
+		System.out.println("Server Ended");
+		javafx.application.Platform.exit();
+		//System.exit(0);
 	}
 
 //private a/m	
