@@ -68,22 +68,26 @@ public class MainWindow extends Application {
 	 * @see javafx.application.Application#start(javafx.stage.Stage)
 	 */
 	@Override
-	public void start(Stage root) throws Exception {
-		AnchorPane mainComponentPane = getMainComponentPane();
-		
-		Scene mainScene = new Scene(mainComponentPane, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT);
-		
-		root.setScene(mainScene);
-		root.setOnCloseRequest((WindowEvent e) ->{
-			ServerRedux.stopRunning();
-			//Platform.exit();
-			try{
-				root.hide();
-				root.close();
-			} catch(RuntimeException e1){
-				System.out.println("Runtime Exception encountered on window close.");
-			}
-		}); root.show();
+	public void start(Stage root){
+		try{
+			AnchorPane mainComponentPane = getMainComponentPane();
+			
+			Scene mainScene = new Scene(mainComponentPane, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT);
+			
+			root.setScene(mainScene);
+			root.setOnCloseRequest((WindowEvent e) ->{
+				ServerRedux.stopRunning();
+				//Platform.exit();
+				try{
+					root.hide();
+					root.close();
+				} catch(RuntimeException e1){
+					System.out.println("Runtime Exception encountered on window close.");
+				}
+			}); root.show();
+		} catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	private AnchorPane getMainComponentPane(){
