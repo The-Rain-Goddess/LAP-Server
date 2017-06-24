@@ -9,9 +9,12 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.rain.app.server.redux.client.Request;
+import com.rain.app.server.redux.dto.AnalysisDTO;
+import com.rain.app.server.redux.dto.MatchDTO;
+import com.rain.app.server.redux.dto.ProfileDTO;
 import com.rain.app.service.riot.api.endpoints.champion_mastery.dto.ChampionMastery;
 import com.rain.app.service.riot.api.endpoints.champion_mastery.dto.ChampionMasteryList;
-import com.rain.app.service.riot.api.endpoints.league.dto.LeagueEntry;
 import com.rain.app.service.riot.api.endpoints.league.dto.LeagueList;
 import com.rain.app.service.riot.api.endpoints.match.dto.Match;
 import com.rain.app.service.riot.api.endpoints.match.dto.MatchReference;
@@ -187,33 +190,24 @@ public class SummonerData implements Serializable{
 		return returnString;
 	}
 	
-	
-	private String getProfileSummary(){
-		String profileSummary = "";
+	private ProfileDTO getProfileSummary(){
 		log("SummonerData: Aggregating profile summary.");
+		ArrayList<LeagueList> leagues = new ArrayList<>();
 		for(Map.Entry<String, ArrayList<LeagueList>> entry : leagueMap.entrySet()){
 			for(LeagueList league : entry.getValue()){
-				profileSummary = profileSummary + "" + league.getQueue() + ":" + league.getTier();
-				LeagueEntry player = league.getEntryBySummonerId(summonerId);
-				profileSummary = profileSummary + ":" + player.getRank() + ":" + player.getLeaguePoints() + "LP";
-				profileSummary = profileSummary + "/";
+				leagues.add(league);
 			} 
 		} log("SummonerData: Profile summary aggregated successfully."); 
-		log("SummonerData:" + profileSummary.substring(0, profileSummary.length()-1));
-		return profileSummary.substring(0, profileSummary.length()-1);
+		ProfileDTO profile = new ProfileDTO(leagues, getChampionMasterySummary(5));
+		log("SummonerData:" + profile);
+		return profile;
 	}
 	
-	private ArrayList<String> getChampionMasterySummary(int numberOfMasteriesToRetrieve){
+	private ArrayList<ChampionMastery> getChampionMasterySummary(int numberOfMasteriesToRetrieve){
 		log("SummonerData: Aggregating mastery summary.");
-		ArrayList<String> championMasterySummary = new ArrayList<>();
-		String tmp = "";
-		System.out.println(championMasteryList.getChampionMasteries().size());
+		ArrayList<ChampionMastery> championMasterySummary = new ArrayList<>();
 		for(int i = 0; i < numberOfMasteriesToRetrieve && i < championMasteryList.getChampionMasteries().size(); i++){
-			ChampionMastery cm = championMasteryList.getChampionMasteries().get(i);
-			tmp = 	ServerRedux.getChampionNameFromId(cm.getChampionId()) + ":" +
-					Long.toString(cm.getChampionLevel()) + ":" +
-					Long.toString(cm.getChampionPoints()); 
-			championMasterySummary.add(tmp);
+			championMasterySummary.add(championMasteryList.getChampionMasteries().get(i));
 		} log("SummonerData: Mastery summary aggregated successfully.");  
 		return championMasterySummary;
 	}
@@ -287,18 +281,22 @@ public class SummonerData implements Serializable{
 	}
 	
 //accessors
-	//TODO: implement getAnalysis
-	public ArrayList<String> getMatchHistory(List<String> request){
+	public MatchDTO getMatchHistory(Request request){
 		log("SummonerData: Retrieving match history for " + summonerName);
-		int numberOfMatches = Integer.parseInt(request.get(2)), startRequest = Integer.parseInt(request.get(3)), stopRequest = Integer.parseInt(request.get(4)), i = startRequest;
-		log("SummonerData: Retrieving match data [" + startRequest + " , " + stopRequest + ")");
-		ArrayList<String> response = new ArrayList<>(numberOfMatches * 10);
+		log("SummonerData: Retrieving match data [" + request.getRequestStart() + " , " + request.getRequestStop() + ")");
+		
+		int numberOfMatches = request.getRequestStop() - request.getRequestStart(), i = 0;
+		ArrayList<Match> matches = new ArrayList<>(numberOfMatches * 10);
+		ArrayList<MatchReference> matchReferences = new ArrayList<>(numberOfMatches * 10);
+		
 		try{
-			for(i = startRequest; i < stopRequest; i++){
-				String aggregatedMatchDetailsString = aggregateMatchData(matchList.get(i), i);
-				log("SummonerData: Match requested -> \n" + matchList.get(i).getGameId() + "\n\n" + Arrays.asList(aggregatedMatchDetailsString.replaceAll("PLAYERS", "PLAYERS\n").split("PLAYERS")));
-				response.addAll(Arrays.asList(aggregatedMatchDetailsString.split("PLAYERS")));
-			} return response;
+			
+			for(i = request.getRequestStart(); i < request.getRequestStop(); i++){
+				log("SummonerData: Match requested -> \n" + matchList.get(i).getGameId() + "\n\n" + Arrays.asList(aggregateMatchData(matchList.get(i), i).replaceAll("PLAYERS", "PLAYERS\n").split("PLAYERS")));
+				matches.add(matchList.get(i));
+				matchReferences.add(matchReferenceList.getMatches().get(i));
+			} return new MatchDTO(matches, matchReferences);
+			
 		} catch(IndexOutOfBoundsException e){
 			e.printStackTrace();
 			log(Level.WARNING, "SummonerData: Match " + i + " not found.", e);
@@ -306,19 +304,17 @@ public class SummonerData implements Serializable{
 		}
 	}
 	
-	public List<String> getProfile(List<String> request){ 
+	public ProfileDTO getProfile(Request request){ 
 		log("SummonerData: Retrieving profile data for " + summonerName + "...");
-		List<String> profile = new ArrayList<>();
-		profile.add(getProfileSummary());
-		getChampionMasterySummary(5).forEach(profile::add);
-		log("SummonerData: Profile -> \n" + ServerUtilities.listToString(profile));
+		ProfileDTO profile = getProfileSummary();
+		log("SummonerData: Profile -> \n" + profile);
 		return profile;
 	} 
 	
-	public List<String> getAnalysis(List<String> request){
+	public AnalysisDTO getAnalysis(Request request){
 		log("SummonerData: Retrieving analysis data for " + summonerName);
 		log("SummonerData: Analysis -> \n" + ServerUtilities.mapOfListsToString(rankedChampionDataMap));
-		return ServerUtilities.mapToList(rankedChampionDataMap);
+		return new AnalysisDTO(rankedChampionDataMap);
 	}
 	
 	public List<String> getMasteryProfileData(){ return masteryProfileData; }
