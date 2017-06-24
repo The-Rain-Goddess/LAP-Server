@@ -1,4 +1,4 @@
-package com.rain.app.server.redux;
+package com.rain.app.server.redux.client;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.rain.app.server.redux.RiotApiHandler;
+import com.rain.app.server.redux.SummonerData;
 import com.rain.app.service.riot.constant.Platform;
 
 public class ClientHandler extends Thread {
@@ -40,11 +42,12 @@ public class ClientHandler extends Thread {
 		this.in = 	new DataInputStream( 	new BufferedInputStream(	s.getInputStream()));
 		this.out = new DataOutputStream(	new BufferedOutputStream(	s.getOutputStream()));
 		this.timeStamp = System.currentTimeMillis();
+		this.riotApiHandler = null;
 	}
 	
 	@Override
 	public void run(){
-		log(Level.FINE, getDate() + " ClientHandler: " + Thread.currentThread().getName() + " is started as ClientHandler.");
+		beginLog();
 		try{
 			String msg = in.readUTF(); 
 			log("ClientHandler: " + msg);
@@ -58,12 +61,20 @@ public class ClientHandler extends Thread {
 		} catch(IOException e){
 			e.printStackTrace();
 		} finally{
-			log("ClientHandler: Time elapsed -> " + getTime());
-			log(Level.FINE, getDate() + " ClientHandler: " + Thread.currentThread().getName() + ", Data Exchange Finished and thread closing." );
+			endLog();
 		}
 	}
 	
-//private accessors/mutators	
+//private accessors/mutators
+	private void beginLog(){
+		log(Level.FINE, getDate() + " ClientHandler: " + Thread.currentThread().getName() + " is started as ClientHandler.");
+	}
+	
+	private void endLog(){
+		log("ClientHandler: Time elapsed -> " + getTime());
+		log(Level.FINE, getDate() + " ClientHandler: " + Thread.currentThread().getName() + ", Data Exchange Finished and thread closing." );
+	}
+	
 	private String getTime(){
 		return String.format("%,.2f sec.", (((double)System.currentTimeMillis() - (double) timeStamp)/1000.0));
 	}
