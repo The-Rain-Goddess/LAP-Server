@@ -37,7 +37,7 @@ public class RiotApiHandler {
 //constructor	
 	public RiotApiHandler(String summonerName, Platform platform){
 		try{
-			log(Level.INFO, "RiotApiHandler: Constructor called.");
+			log(Level.INFO, "RiotApiHandler: Constructor called for summoner " + summonerName + "...");
 			this.summonerName = summonerName;
 			this.platform = platform;
 			this.api = new RiotApi(new ApiConfig().setKey(apiKey));
@@ -45,7 +45,7 @@ public class RiotApiHandler {
 			this.summonerId = this.summoner.getId();
 			this.summonerAccountId = this.summoner.getAccountId();
 			this.summonerData = (isSummonerExistent()) ? (isSummonerCurrent()) ? getSummonerDataFromStorage(summonerName) : updateSummoner() : createSummoner();
-			log(Level.INFO, "RiotApiHandler: Constructor call finished for summoner " + summonerName);
+			log(Level.INFO, "RiotApiHandler: Constructor call finished for summoner " + summonerName + ".");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
@@ -62,16 +62,25 @@ public class RiotApiHandler {
 		try {
 			Future<Object> future = ServerRedux.getDataRetrievalPool().submit(new FutureTask<Object>(api, method, args));
 			return future.get();
-		} catch (InterruptedException | ExecutionException e) {
+		} catch (ExecutionException e) {
 			e.printStackTrace();
+			System.out.println("Exception: " + e.getCause());
 			if(e.getCause().getClass().equals(RiotApiException.class)){
-				try{
-					Thread.sleep(1000L);
-					return evaluateFromFuture(method, args);
-				} catch(InterruptedException e1){
-					e1.printStackTrace();
-				}
-			} return null;
+				System.err.println("Riot Api Exception!!!");
+				suspend(1000L);
+				return evaluateFromFuture(method, args);
+			} else return null;
+		} catch(InterruptedException e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	private void suspend(long timeout){
+		try{
+			Thread.sleep(timeout);
+		} catch(InterruptedException e){
+			e.printStackTrace();
 		}
 	}
 	
