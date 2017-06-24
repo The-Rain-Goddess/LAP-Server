@@ -2,17 +2,17 @@ package com.rain.app.server.redux.client;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -20,16 +20,20 @@ import java.util.logging.Logger;
 
 import com.rain.app.server.redux.RiotApiHandler;
 import com.rain.app.server.redux.SummonerData;
+import com.rain.app.server.redux.dto.AnalysisDTO;
+import com.rain.app.server.redux.dto.MatchDTO;
+import com.rain.app.server.redux.dto.ProfileDTO;
+import com.rain.app.server.redux.dto.ResponseDTO;
 import com.rain.app.service.riot.constant.Platform;
 
 public class ClientHandler extends Thread {
 	private Socket s;
-	private DataInputStream in;
-	private DataOutputStream out;
-	private List<String> requestFromClient;
+	private ObjectInputStream in;
+	private ObjectOutputStream out;
 	private RiotApiHandler riotApiHandler;
 	private long timeStamp;
-	private String request;
+	private String requestedName;
+	private Request requestFromClient;
 	
 	protected SummonerData mSummoner;
 	
@@ -39,25 +43,26 @@ public class ClientHandler extends Thread {
 	public ClientHandler(Socket s) throws IOException{
 		log("ClientHandler: Client accepted");
 		this.s = 	s;
-		this.in = 	new DataInputStream( 	new BufferedInputStream(	s.getInputStream()));
-		this.out = new DataOutputStream(	new BufferedOutputStream(	s.getOutputStream()));
+		this.in = 	new ObjectInputStream( 	new BufferedInputStream(	s.getInputStream()));
+		this.out = new ObjectOutputStream(	new BufferedOutputStream(	s.getOutputStream()));
 		this.timeStamp = System.currentTimeMillis();
 		this.riotApiHandler = null;
+		this.requestFromClient = null;
 	}
 	
 	@Override
 	public void run(){
 		beginLog();
 		try{
-			String msg = in.readUTF(); 
-			log("ClientHandler: " + msg);
-			requestFromClient = Arrays.asList(msg.split("::"));
-			request = requestFromClient.get(1);
-			requestFromClient.set(0, requestFromClient.get(0).trim().replaceAll(" ", "").toLowerCase());
-			riotApiHandler = new RiotApiHandler(requestFromClient.get(0).trim().replaceAll(" ", "").toLowerCase(), Platform.NA);
-			List<String> responseForClient = processRequest();
+			getRequestFromClient();
+			setupRiotApiHandler();
+			ResponseDTO responseForClient = processRequest();
 			respondToClient(responseForClient);
 			in.close(); out.close(); s.close();
+		} catch(ClassNotFoundException e){
+			e.printStackTrace();
+		} catch(SocketException e){
+			e.printStackTrace();
 		} catch(IOException e){
 			e.printStackTrace();
 		} finally{
@@ -66,6 +71,17 @@ public class ClientHandler extends Thread {
 	}
 	
 //private accessors/mutators
+	private void getRequestFromClient() throws ClassNotFoundException, SocketException, IOException{
+		requestFromClient = (Request) in.readObject();
+		log("ClientHandler: " + requestFromClient);
+		requestedName = requestFromClient.getSummonerName();
+		requestFromClient.setSummonerName(requestedName.trim().replaceAll(" ", "").toLowerCase());
+	}
+	
+	private void setupRiotApiHandler(){
+		riotApiHandler = new RiotApiHandler(requestedName, Platform.NA);
+	}
+	
 	private void beginLog(){
 		log(Level.FINE, getDate() + " ClientHandler: " + Thread.currentThread().getName() + " is started as ClientHandler.");
 	}
@@ -79,33 +95,32 @@ public class ClientHandler extends Thread {
 		return String.format("%,.2f sec.", (((double)System.currentTimeMillis() - (double) timeStamp)/1000.0));
 	}
 	
-	private List<String> processRequest(){
-		List<String> responseToClient = new ArrayList<>();
+	private ResponseDTO processRequest(){
 		log("ClientHandler: Processing client request...");
-		if(request.equals("get_match_history")){
-			responseToClient = getMatchHistory();
-		} else if(request.equals("get_analysis")){
-			responseToClient = getAnalysis();
-		} else if(request.equals("get_profile")){
-			responseToClient = getProfile();
-		} else if(request.equals("send_feedback")){
-			responseToClient = sendFeedback();
+		ResponseDTO responseToClient = null;
+		if(requestFromClient.getType() == RequestType.GET){
+			responseToClient = new ResponseDTO();
+			responseToClient.setMatch(getMatchHistory());
+			responseToClient.setAnalysis(getAnalysis());
+			responseToClient.setProfile(getProfile());
+		} else if(requestFromClient.getType() == RequestType.POST){
+			sendFeedback();
 		} return responseToClient;	
 	}
 	
-	private List<String> getMatchHistory(){
+	private MatchDTO getMatchHistory(){
 		log("ClientHandler: Attempting to get match history...");
-		return riotApiHandler.getSummonerData(requestFromClient.get(0)).getMatchHistory(requestFromClient);
+		return riotApiHandler.getSummonerData(requestFromClient.getSummonerName()).getMatchHistory(requestFromClient);
 	}
 	
-	private List<String> getAnalysis(){
+	private AnalysisDTO getAnalysis(){
 		log("ClientHandler: Attempting to get analysis...");
-		return riotApiHandler.getSummonerData(requestFromClient.get(0)).getAnalysis(requestFromClient);
+		return riotApiHandler.getSummonerData(requestFromClient.getSummonerName()).getAnalysis(requestFromClient);
 	}
 
-	private List<String> getProfile(){
+	private ProfileDTO getProfile(){
 		log("ClientHandler: Attempting to get profile data...");
-		return riotApiHandler.getSummonerData(requestFromClient.get(0)).getProfile(requestFromClient);
+		return riotApiHandler.getSummonerData(requestFromClient.getSummonerName()).getProfile(requestFromClient);
 	}
 	
 	private List<String> sendFeedback(){
@@ -118,22 +133,18 @@ public class ClientHandler extends Thread {
 				feedback.add(line);
 			} Path feedbackFilePath = Paths.get("feedback\\" + getDate().replace(":", "-").replace(" ", "-")+".txt");
 			Files.write(feedbackFilePath, feedback, Charset.forName("UTF-8"));
-			log("ClientHandler: Feedback has bee successfully written to file.");
+			log("ClientHandler: Feedback has been successfully written to file.");
 		} catch(IOException e){
 			e.printStackTrace();
 		} return null;
 	}
 
-	private void respondToClient(List<String> response) throws IOException {
+	private void respondToClient(ResponseDTO response) throws IOException {
 		log("ClientHandler: Succesfully retrieved data for response.");
 		log("ClientHandler: Responding to client with response...");
 		//log("ClientHandler: \n" + ServerUtilities.printList(response));
-		out.writeUTF(response.size()+"");
-		out.flush();
-		for(int i = 0; i < response.size(); i++){
-			out.writeUTF(response.get(i));
-			out.flush();
-		} log("ClientHandler: Response succesfully transmitted.");
+		out.writeObject(response);
+		log("ClientHandler: Response to client succesfully transmitted.");
 	}
 	
 	private String getDate(){
