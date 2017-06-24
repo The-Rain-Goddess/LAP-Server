@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.rain.app.server.redux.gui.GUIEvent;
 import com.rain.app.server.redux.gui.MainWindow;
 import com.rain.app.server.redux.logger.MyLogger;
 import com.rain.app.service.riot.api.ApiConfig;
@@ -29,12 +30,13 @@ public class ServerRedux {
 //Package Varriables	
 	private static final Map<String, SummonerData> summonerDataStorage = Collections.synchronizedSortedMap(new TreeMap<String, SummonerData>());
 	private static final ExecutorService dataRetrievalPool = new ThreadPoolExecutor(1, 100, 10000L, TimeUnit.MILLISECONDS, new RateLimitingQueue(5000, 8, 10000L, 1));
-	private ExecutorService clientHandlerService;
+	private static ExecutorService clientHandlerService;
 	private static ChampionList championTranslationList;
 	private static boolean running = true;
 	private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	private final int PORT_NUMBER = 48868;
 	private static ServerSocket ss = null;
+	private static MainWindow gui = null;
 	
 //MAIN	
 	public static void main(String[] args) throws IOException{
@@ -63,6 +65,8 @@ public class ServerRedux {
 			System.out.println("Server Socket was closed.");
 		} catch(IOException e){
 			e.printStackTrace();
+		} catch(Exception e){
+			e.printStackTrace();
 		} finally{
 			shutdownServer();
 		}
@@ -72,7 +76,8 @@ public class ServerRedux {
 		clientHandlerService = Executors.newCachedThreadPool();
 		
 		clientHandlerService.submit(() -> {
-			new MainWindow().begin(new String[0]);
+			gui = new MainWindow();
+			gui.begin(new String[0]);
 		});
 	}
 	
@@ -105,7 +110,7 @@ public class ServerRedux {
 		clientHandlerService.shutdownNow();
 		System.out.println("Server Ended");
 		javafx.application.Platform.exit();
-		//System.exit(0);
+		System.exit(0);
 	}
 
 //private a/m	
@@ -134,6 +139,16 @@ public class ServerRedux {
 	}	
 	
 //non-private a/m
+	public static void addEventToGUI(GUIEvent e){
+		try{
+			clientHandlerService.submit(()-> {
+				e.execute();
+			});
+		} catch(Exception x){
+			x.printStackTrace();
+		}
+	}
+	
 	public static String getChampionNameFromId(long champId){
 		for(Map.Entry<String, Champion> entry : new ArrayList<>(championTranslationList.getData().entrySet()))
 			if(entry.getValue().getId() == champId)
@@ -147,6 +162,8 @@ public class ServerRedux {
 			data.add(entry.getValue());
 		} return data;
 	}
+	
+	public static MainWindow getGUI(){ return gui; }
 	
 	public static ChampionList getChampionTranslationList(){ return championTranslationList; }
 	
