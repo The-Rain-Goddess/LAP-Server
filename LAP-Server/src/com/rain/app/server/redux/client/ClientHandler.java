@@ -142,7 +142,6 @@ public class ClientHandler extends Thread {
 	private void respondToClient(ResponseDTO response) throws IOException {
 		log("ClientHandler: Succesfully retrieved data for response.");
 		log("ClientHandler: Responding to client with response...");
-		//log("ClientHandler: \n" + ServerUtilities.printList(response));
 		out.writeObject(response);
 		log("ClientHandler: Response to client succesfully transmitted.");
 	}
