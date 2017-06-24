@@ -3,6 +3,7 @@
  */
 package com.rain.app.server.redux.gui;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,6 +22,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -44,10 +46,15 @@ import javafx.stage.WindowEvent;
  *
  */
 public class MainWindow extends Application {
-	private static final int WINDOW_MIN_HEIGHT = 700, WINDOW_MIN_WIDTH = 1000;
+	private static final int WINDOW_MIN_HEIGHT = 700, WINDOW_MIN_WIDTH = 1600;
 	private final static Insets DEFAULT_INSETS = new Insets(10,10,10,10);
 	private  WebView browser;
 	private  WebEngine engine;
+	private BorderPane mainBorderPane;
+	private TableView<SummonerData> table;
+	private TextField search;
+	
+	private final String LOG_PATH = "Q:\\Workspace\\LAP-Server (git)\\LAP-Server\\LAP-Server\\log\\Logging.html";
 
 	/**
 	 * 
@@ -162,35 +169,54 @@ public class MainWindow extends Application {
 	
 //Main border Pane
 	private BorderPane getMainBorderPane(){
-		BorderPane mainBorderPane = new BorderPane();
+		mainBorderPane = new BorderPane();
 		//mainBorderPane.setTop(getArchiveControls());
 		//mainBorderPane.setRight(getArchiveData());
 		//mainBorderPane.setLeft(getArchiveFileSystem());
-		mainBorderPane.setRight(getStorageData(ServerRedux.getSummonerDataStorageAsList()));
+		mainBorderPane.setRight(setStorageData(ServerRedux.getSummonerDataStorageAsList()));
 		mainBorderPane.setLeft(getLog());
 		return mainBorderPane;
 	}
+	
+	public void updateStorageData(){
+		//mainBorderPane.setRight(setStorageData(ServerRedux.getSummonerDataStorageAsList()));
+		
+		//sort and filter the data
+		SortedList<SummonerData> sortedData = getSortedData(ServerRedux.getSummonerDataStorageAsList());
+		
+		// Bind the SortedList comparator to the TableView comparator
+		sortedData.comparatorProperty().bind(table.comparatorProperty());
+		
+		// Show the Data
+		table.setItems(sortedData);
+	}
 
 //Storage Data
-	private VBox getStorageData(List<SummonerData> dataForTable){
+	private VBox setStorageData(List<SummonerData> dataForTable){
 		VBox container = new VBox();
 		HBox controls = new HBox();
 		controls.setAlignment(Pos.TOP_RIGHT);
-		final TextField search = new TextField();
-		controls.getChildren().addAll(new Label("Search"), search);
+		search = new TextField();
+		Button reload = new Button();
+		reload.setGraphic(new ImageView(new Image("com/rain/app/server/redux/reload32_32.png")));
+		reload.setOnAction((ActionEvent e)->{
+			updateStorageData();
+		});
+		controls.getChildren().addAll(new Label("Search"), search, reload);
 		HBox.setMargin(search, new Insets(0,10,0,10));
+		HBox.setMargin(reload, new Insets(0,5,0,10));
 		
-		final TableView<SummonerData> table = new TableView<SummonerData>();
+		table = new TableView<SummonerData>();
 		table.setId("Data Table");
-		table.setMinHeight(WINDOW_MIN_HEIGHT-150);
-		table.setMinWidth(WINDOW_MIN_WIDTH / 2);
+		table.setMinHeight(WINDOW_MIN_HEIGHT - 150);
+		table.setMinWidth(WINDOW_MIN_WIDTH / 4);
 		
 		//ititialize columns
 		table.getColumns().setAll(getTableColumns());
 		
 		if(dataForTable!=null){
 			//sort and filter the data
-			SortedList<SummonerData> sortedData = getSortedData(search, dataForTable);
+			SortedList<SummonerData> sortedData = getSortedData(dataForTable);
 			
 			// Bind the SortedList comparator to the TableView comparator
 			sortedData.comparatorProperty().bind(table.comparatorProperty());
@@ -220,10 +246,10 @@ public class MainWindow extends Application {
 		return Arrays.asList(nameCol, idCol, matchListCol);		
 	}
 	
-	private SortedList<SummonerData> getSortedData(TextField search, List<SummonerData> list){
+	private SortedList<SummonerData> getSortedData(List<SummonerData> list){
 		//get the data
 		List<SummonerData> data = list;
-				
+		
 		//wrap the ObservableList in a FilteredList
 		FilteredList<SummonerData> filteredData = new FilteredList<SummonerData>(FXCollections.observableList(data), p -> true);
 		
@@ -257,16 +283,28 @@ public class MainWindow extends Application {
 		
 		browser = new WebView();
 		engine = browser.getEngine();
-		browser.setMaxWidth(WINDOW_MIN_WIDTH / 2 - 50);
-		engine.load("Q:\\Workspace\\LAP-Server (git)\\LAP-Server\\LAP-Server\\log\\Logging.html");
+		browser.setMaxWidth(WINDOW_MIN_WIDTH / 4 * 3 );
+		browser.setMinWidth(WINDOW_MIN_WIDTH / 4 * 3 - 50);
+		engine.load(new File(LOG_PATH).toURI().toString());
+		
+		Button reload = new Button();
+		
+		try{ reload.setGraphic(new ImageView(new Image("com/rain/app/server/redux/reload32_32.png")));}
+		catch(Exception e){ e.printStackTrace(); }
+		
+		reload.setOnAction((ActionEvent e)-> {
+			engine.reload();
+		});
 		
 		VBox.setMargin(browser, DEFAULT_INSETS);
-		container.getChildren().add(browser);
+		container.getChildren().addAll(reload, browser);
 		return container;
 	}
 	
 	public void updateLog(){
-		engine.load("Q:\\Workspace\\LAP-Server (git)\\LAP-Server\\LAP-Server\\log\\Logging.html");
+		System.out.println("Loading log...");
+		engine.reload();
+		System.out.println("Loaded log.");
 	}
 	
 }
