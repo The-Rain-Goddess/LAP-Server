@@ -59,7 +59,7 @@ public class ClientHandler extends Thread {
 			e.printStackTrace();
 		} finally{
 			log("ClientHandler: Time elapsed -> " + getTime());
-			log(Level.FINE, getDate() + " ClientHandler: " + Thread.currentThread().getName() + ", Data Exchange Finished and thread closing." ); 
+			log(Level.FINE, getDate() + " ClientHandler: " + Thread.currentThread().getName() + ", Data Exchange Finished and thread closing." );
 		}
 	}
 	

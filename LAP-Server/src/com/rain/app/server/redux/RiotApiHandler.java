@@ -1,9 +1,9 @@
 package com.rain.app.server.redux;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -145,10 +145,10 @@ public class RiotApiHandler {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private Map<String, List<LeagueList>> getLeagueMap() throws NoSuchMethodException, SecurityException{
+	private TreeMap<String, ArrayList<LeagueList>> getLeagueMap() throws NoSuchMethodException, SecurityException{
 		log("RiotApiHandler: Attempting to retrieve league map...");
-		Map<String, List<LeagueList>> map = new TreeMap<String, List<LeagueList>>();
-		map.put(summonerName, (List<LeagueList>)evaluateFromFuture(api.getClass().getMethod("getLeagueBySummonerId", Platform.class, long.class), platform, summonerId));
+		TreeMap<String, ArrayList<LeagueList>> map = new TreeMap<String, ArrayList<LeagueList>>();
+		map.put(summonerName, (ArrayList<LeagueList>)evaluateFromFuture(api.getClass().getMethod("getLeagueBySummonerId", Platform.class, long.class), platform, summonerId));
 		//log("RiotApiHandler: Successfully retrieved league map.");
 		return map; 
 	}
