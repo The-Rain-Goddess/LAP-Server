@@ -1,9 +1,15 @@
 package com.rain.app.server.redux;
 
+import java.io.Serializable;
+
 import com.rain.app.service.riot.api.endpoints.match.dto.ParticipantStats;
 
-public class AggregatedChampionData extends Object{
+public class AggregatedChampionData implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 622275425864268559L;
 	private ParticipantStats unaggregatedStats;
 	private long championId;
 
