@@ -27,20 +27,19 @@ import com.rain.app.service.riot.api.endpoints.summoner.dto.Summoner;
 
 
 public class SummonerData implements Serializable{
-	/**
-	 * 
-	 */
+	
 	private static final long serialVersionUID = 8387323305835454512L;
+	private static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+	private static final int WIN_DATA_INDEX = 1, LOSS_DATA_INDEX = 2, ALL_DATA_INDEX = 0;
+	
 	private ArrayList<Match> matchList;
 	private MatchReferenceList matchReferenceList;
 	private ArrayList<String> masteryProfileData;
 	private ChampionMasteryList championMasteryList;
 	private TreeMap<String, ArrayList<LeagueList>> leagueMap;
 	private TreeMap<Integer, ArrayList<AggregatedChampionData>> rankedChampionDataMap;
-	private long summonerId;
 	private String summonerName;
-	private static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-	private final int WIN_DATA_INDEX = 1, LOSS_DATA_INDEX = 2, ALL_DATA_INDEX = 0;
+	private long summonerId;
 
 //constructors	
 	public SummonerData(String name, Summoner summoner){
@@ -52,6 +51,7 @@ public class SummonerData implements Serializable{
 	}
 
 //private a/m
+	//statics
 	private static void log(Level level, String msg, Exception e){
 		LOGGER.log(level, msg, e);
 	}
@@ -60,6 +60,7 @@ public class SummonerData implements Serializable{
 		LOGGER.log(Level.INFO, msg);
 	}
 	
+	//non-statics
 	private String aggregateMatchData(Match match, int matchIndex){
 		String aggregatedData = null;
 		List<String> unorderedPlayerList = new ArrayList<>(10);
@@ -281,6 +282,7 @@ public class SummonerData implements Serializable{
 	}
 	
 //accessors
+	//dtos
 	public MatchDTO getMatchHistory(Request request){
 		log("SummonerData: Retrieving match history for " + summonerName);
 		log("SummonerData: Retrieving match data [" + request.getRequestStart() + " , " + request.getRequestStop() + ")");
@@ -288,7 +290,6 @@ public class SummonerData implements Serializable{
 		int numberOfMatches = request.getRequestStop() - request.getRequestStart(), i = 0;
 		ArrayList<Match> matches = new ArrayList<>(numberOfMatches * 10);
 		ArrayList<MatchReference> matchReferences = new ArrayList<>(numberOfMatches * 10);
-		
 		try{
 			
 			for(i = request.getRequestStart(); i < request.getRequestStop(); i++){
@@ -317,6 +318,7 @@ public class SummonerData implements Serializable{
 		return new AnalysisDTO(rankedChampionDataMap);
 	}
 	
+	//regular getters
 	public List<String> getMasteryProfileData(){ return masteryProfileData; }
 	
 	public String getSummonerName(){ return summonerName; }
