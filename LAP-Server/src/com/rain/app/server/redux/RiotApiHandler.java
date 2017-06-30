@@ -10,6 +10,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.rain.app.server.redux.client.Request;
 import com.rain.app.service.riot.api.ApiConfig;
 import com.rain.app.service.riot.api.RiotApi;
 import com.rain.app.service.riot.api.RiotApiException;
@@ -37,7 +38,7 @@ public class RiotApiHandler {
 //constructor	
 	public RiotApiHandler(String summonerName, Platform platform){
 		try{
-			log(Level.INFO, "RiotApiHandler: Constructor called for summoner " + summonerName + "...");
+			log(Level.INFO, "RiotApiHandler: " + threadName() + " Constructor called for summoner " + summonerName + "...");
 			this.summonerName = summonerName;
 			this.platform = platform;
 			this.api = new RiotApi(new ApiConfig().setKey(apiKey));
@@ -45,7 +46,7 @@ public class RiotApiHandler {
 			this.summonerId = this.summoner.getId();
 			this.summonerAccountId = this.summoner.getAccountId();
 			this.summonerData = (isSummonerExistent()) ? (isSummonerCurrent()) ? getSummonerDataFromStorage(summonerName) : updateSummoner() : createSummoner();
-			log(Level.INFO, "RiotApiHandler: Constructor call finished for summoner " + summonerName + ".");
+			log(Level.INFO, "RiotApiHandler: " + threadName() + " Constructor call finished for summoner " + summonerName + ".");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
@@ -64,8 +65,11 @@ public class RiotApiHandler {
 			return future.get();
 		} catch (ExecutionException e) {
 			e.printStackTrace();
-			System.out.println("Exception: " + e.getCause());
-			if(e.getCause().getClass().equals(RiotApiException.class)){
+			Throwable tmp = e.getCause();
+			while(tmp.getCause()!=null){
+				tmp = tmp.getCause();
+			}
+			if(tmp.equals(RiotApiException.class)){
 				System.err.println("Riot Api Exception!!!");
 				suspend(1000L);
 				return evaluateFromFuture(method, args);
@@ -105,12 +109,20 @@ public class RiotApiHandler {
 		return (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getRecentMatchListByAccountId", Platform.class, long.class), platform, summonerId);
 	}
 	
-	private MatchReferenceList getMatchReferenceList() throws InterruptedException, ExecutionException, NoSuchMethodException, SecurityException{
-		return (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class), platform, summonerAccountId);
+	private MatchReferenceList getMatchReferenceList(){
+		try {
+			return (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class), platform, summonerAccountId);
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} return null;
 	}
 
 	private SummonerData getSummonerDataFromStorage(String keyName){
-		log("RiotApiHandler: Retrieving old summoner data...");
+		log("RiotApiHandler: " + threadName() + " Retrieving old summoner data...");
 		return ServerRedux.getSummonerDataStorage().get(keyName);
 	}
 	
@@ -136,9 +148,9 @@ public class RiotApiHandler {
 		List<MatchReference> matchReferences = mrl.getMatches();
 		int numberOfNewMatchesToAdd = getNumberOfNewMatches(matchReferences);
 		for(int i = numberOfNewMatchesToAdd; i > 0 ; i--){
-			log("RiotApiHandler: Retrieving match: " + matchReferences.get(i).getGameId() + "...");
+			log("RiotApiHandler: " + threadName() + " Retrieving match: " + matchReferences.get(i).getGameId() + "...");
 			ServerRedux.getSummonerDataStorage().get(summonerName).addMatch(getMatch(matchReferences.get(i).getGameId()), true);
-			log("RiotApiHandler: Successfully retrieved match: " + matchReferences.get(i).getGameId() + ".");
+			log("RiotApiHandler: " + threadName() + " Successfully retrieved match: " + matchReferences.get(i).getGameId() + ".");
 		}
 	}
 	
@@ -148,14 +160,14 @@ public class RiotApiHandler {
 	}
 	
 	private void updateRankedData(){
-		log("RiotApiHandler: Updating ranked data...");
+		log("RiotApiHandler: " + threadName() + " Updating ranked data...");
 		ServerRedux.getSummonerDataStorage().get(summonerName).updateAnalysis();
-		log("RiotApiHandler: Successfully updated ranked data.");
+		log("RiotApiHandler: " + threadName() + " Successfully updated ranked data.");
 	}
 	
 	@SuppressWarnings("unchecked")
 	private TreeMap<String, ArrayList<LeagueList>> getLeagueMap() throws NoSuchMethodException, SecurityException{
-		log("RiotApiHandler: Attempting to retrieve league map...");
+		log("RiotApiHandler: " + threadName() + " Attempting to retrieve league map...");
 		TreeMap<String, ArrayList<LeagueList>> map = new TreeMap<String, ArrayList<LeagueList>>();
 		map.put(summonerName, (ArrayList<LeagueList>)evaluateFromFuture(api.getClass().getMethod("getLeagueBySummonerId", Platform.class, long.class), platform, summonerId));
 		//log("RiotApiHandler: Successfully retrieved league map.");
@@ -163,12 +175,12 @@ public class RiotApiHandler {
 	}
 	
 	private ChampionMasteryList getChampionMastery() throws NoSuchMethodException, SecurityException{
-		log("RiotApiHandler: Attempting to retrieve Champion Mastery...");
+		log("RiotApiHandler: " + threadName() + " Attempting to retrieve Champion Mastery...");
 		return (ChampionMasteryList) evaluateFromFuture(api.getClass().getMethod("getChampionMasteriesBySummoner", Platform.class, long.class), platform, summonerId);
 	}
 	
 	private List<Match> getMatchList(MatchReferenceList newMatchReferences) throws NoSuchMethodException, SecurityException{
-		log("RiotApiHandler: Attempting to retrieve MatchReferenceList...");
+		log("RiotApiHandler: " + threadName() + " Attempting to retrieve MatchReferenceList...");
 		List<Match> matchList = Arrays.asList(	this.getMatch(newMatchReferences.getMatches().get(0).getGameId()),
 				this.getMatch(newMatchReferences.getMatches().get(1).getGameId()),
 				this.getMatch(newMatchReferences.getMatches().get(2).getGameId()),
@@ -177,40 +189,40 @@ public class RiotApiHandler {
 				this.getMatch(newMatchReferences.getMatches().get(5).getGameId()),
 				this.getMatch(newMatchReferences.getMatches().get(6).getGameId()),
 				this.getMatch(newMatchReferences.getMatches().get(7).getGameId()));
-		log("RiotApiHandler: Successfully retrieved MatchReferenceList.");
+		log("RiotApiHandler: " + threadName() + " Successfully retrieved MatchReferenceList.");
 		return matchList;
 	}
 	
 	private SummonerData updateSummoner(){ 
-		log("RiotApiHandler: Updating old summoner data..." + " for " + summonerName);
+		log("RiotApiHandler: " + threadName() + " Updating old summoner data..." + " for " + summonerName);
 		try {
 			MatchReferenceList updatedMatchReferenceList = getMatchReferenceList();
 			updateMatchReferences(updatedMatchReferenceList);
 			updateMatches(updatedMatchReferenceList);
 			updateProfileData();
 			updateRankedData();
-		} catch (NoSuchMethodException | SecurityException | InterruptedException | ExecutionException e) {
+		} catch (NoSuchMethodException | SecurityException e) {
 			e.printStackTrace();
 		}
-		log("RiotApiHandler: Successfully updated old summoner data.");
+		log("RiotApiHandler: " + threadName() + " Successfully updated old summoner data.");
 		return ServerRedux.getSummonerDataStorage().get(summonerName);
 	}
 	
 	private SummonerData createSummoner(){
-		log("RiotApiHandler: Creating new SummonerData for " + summonerName + "...");
+		log("RiotApiHandler: " + threadName() + " Creating new SummonerData for " + summonerName + "...");
 		SummonerData newSummoner = null;
 		try {
 			MatchReferenceList newMatchReferences = getMatchReferenceList();
 			newSummoner = new SummonerData(summonerName, summoner);
 			newSummoner.setMatchReferenceList(newMatchReferences);
 			getMatchList(newMatchReferences).forEach(newSummoner::addMatch);
-			log("RiotApiHandler: Mastery list: \n" + ServerUtilities.listToString(newSummoner.setChampionMasteryList(getChampionMastery()).getChampionMasteries()));
-			log("RiotApiHandler: League map: \n" + ServerUtilities.mapToString(newSummoner.setLeagueMap(getLeagueMap()).getLeagueMap()));
-			log("RiotApiHandler: Attempting to retrieve updated analysis data...");
-			log("RiotApiHandler: Ranked Analysis: \n" + ServerUtilities.mapOfListsToString(newSummoner.updateAnalysis().getRankedAnalysis()));
+			log("RiotApiHandler: " + threadName() + " Mastery list: \n" + ServerUtilities.listToString(newSummoner.setChampionMasteryList(getChampionMastery()).getChampionMasteries()));
+			log("RiotApiHandler: " + threadName() + " League map: \n" + ServerUtilities.mapToString(newSummoner.setLeagueMap(getLeagueMap()).getLeagueMap()));
+			log("RiotApiHandler: " + threadName() + " Attempting to retrieve updated analysis data...");
+			log("RiotApiHandler: " + threadName() + " Ranked Analysis: \n" + ServerUtilities.mapOfListsToString(newSummoner.updateAnalysis().getRankedAnalysis()));
 			ServerRedux.getSummonerDataStorage().put(summonerName, newSummoner);
-			log("RiotApiHandler: SummonerData->" + summonerName + " was successfully added to storage.");
-		} catch (NoSuchMethodException | SecurityException | InterruptedException | ExecutionException e) {
+			log("RiotApiHandler: " + threadName() + " SummonerData->" + summonerName + " was successfully added to storage.");
+		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
 		} return newSummoner;
 	}
@@ -219,7 +231,40 @@ public class RiotApiHandler {
 		LOGGER.log(Level.INFO, msg);
 	}
 
-//non-private accessors/mutators	
+//non-private accessors/mutators
+	public void prepareRequest(Request request){
+		MatchReferenceList matchReferences = getMatchReferenceList();
+		log("RiotApiHandler: " + threadName() + " Recieved request for data, executing now...");
+			while(getSummonerData(summonerName).getMatchList().size() <= request.getRequestStop()){
+				try{
+					getSummonerData(summonerName)
+						.addMatch(
+							getMatch(
+								matchReferences
+									.getMatches()
+										.get(
+											getSummonerData(summonerName)
+												.getMatchList()
+													.size()+1)			
+															.getGameId() ) );
+					log("RiotApiHandler: [" + Thread.currentThread().getName() 
+											+ "] loaded new match to summoner " 
+											+ summonerName + "-> " 
+											+ getSummonerData(summonerName).getMatchList().get(getSummonerData(summonerName).getMatchList().size()-1));
+				} catch (NoSuchMethodException e) {
+					e.printStackTrace();
+				} catch (SecurityException e) {
+					e.printStackTrace();
+				} catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+	}
+	
+	private String threadName(){
+		return "[" + Thread.currentThread().getName() + "]";
+	}
+	
 	public SummonerData getSummonerData(String key){
 		return ServerRedux.getSummonerDataStorage().get(key);
 	}
