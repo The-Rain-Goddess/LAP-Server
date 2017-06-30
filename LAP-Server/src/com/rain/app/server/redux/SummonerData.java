@@ -13,6 +13,7 @@ import com.rain.app.server.redux.client.Request;
 import com.rain.app.server.redux.dto.AnalysisDTO;
 import com.rain.app.server.redux.dto.MatchDTO;
 import com.rain.app.server.redux.dto.ProfileDTO;
+import com.rain.app.server.redux.dto.ResponseDTO;
 import com.rain.app.service.riot.api.endpoints.champion_mastery.dto.ChampionMastery;
 import com.rain.app.service.riot.api.endpoints.champion_mastery.dto.ChampionMasteryList;
 import com.rain.app.service.riot.api.endpoints.league.dto.LeagueList;
@@ -43,11 +44,18 @@ public class SummonerData implements Serializable{
 
 //constructors	
 	public SummonerData(String name, Summoner summoner){
-		log("SummonerData: " + "Constructor called.");
+		log("SummonerData: " + threadName() + " " + "Constructor called.");
 		this.summonerId = summoner.getId();
 		this.summonerName = name;
 		this.matchList = new ArrayList<>();
-		log("SummonerData: " + summonerName + " was created.");
+		log("SummonerData: " + threadName() + " " + summonerName + " was created.");
+	}
+	
+	public SummonerData(ResponseDTO dataDTO){
+		log("SummonerData: " + threadName() + " " + "Constructor called.");
+		this.summonerName = dataDTO.getSummonerName();
+		this.summonerId = dataDTO.getSummonerId();
+		log("SummonerData: " + threadName() + " " + summonerName + " was created.");
 	}
 
 //private a/m
@@ -192,24 +200,24 @@ public class SummonerData implements Serializable{
 	}
 	
 	private ProfileDTO getProfileSummary(){
-		log("SummonerData: Aggregating profile summary.");
+		log("SummonerData: " + threadName() + " Aggregating profile summary.");
 		ArrayList<LeagueList> leagues = new ArrayList<>();
 		for(Map.Entry<String, ArrayList<LeagueList>> entry : leagueMap.entrySet()){
 			for(LeagueList league : entry.getValue()){
 				leagues.add(league);
 			} 
-		} log("SummonerData: Profile summary aggregated successfully."); 
+		} log("SummonerData: " + threadName() + " Profile summary aggregated successfully."); 
 		ProfileDTO profile = new ProfileDTO(leagues, getChampionMasterySummary(5));
-		log("SummonerData:" + profile);
+		log("SummonerData: " + threadName() + " " + profile);
 		return profile;
 	}
 	
 	private ArrayList<ChampionMastery> getChampionMasterySummary(int numberOfMasteriesToRetrieve){
-		log("SummonerData: Aggregating mastery summary.");
+		log("SummonerData: " + threadName() + " Aggregating mastery summary.");
 		ArrayList<ChampionMastery> championMasterySummary = new ArrayList<>();
 		for(int i = 0; i < numberOfMasteriesToRetrieve && i < championMasteryList.getChampionMasteries().size(); i++){
 			championMasterySummary.add(championMasteryList.getChampionMasteries().get(i));
-		} log("SummonerData: Mastery summary aggregated successfully.");  
+		} log("SummonerData: " + threadName() + " Mastery summary aggregated successfully.");  
 		return championMasterySummary;
 	}
 	
@@ -245,11 +253,15 @@ public class SummonerData implements Serializable{
 		return rankedChampionDataMap;
 	}
 	
+	private String threadName(){
+		return "[" + Thread.currentThread().getName() + "]";
+	}
+	
 //non-private accessors/mutators
 	public SummonerData updateAnalysis(){
-		log("SummonerData: Updating analysis data for " + summonerName + "...");
+		log("SummonerData: " + threadName() + " Updating analysis data for " + summonerName + "...");
 		rankedChampionDataMap = updateRankedChampionDataMap();
-		log("SummonerData: Succesfully updated analysis data.");
+		log("SummonerData: " + threadName() + " Succesfully updated analysis data.");
 		return this;
 	}
 	
@@ -284,37 +296,37 @@ public class SummonerData implements Serializable{
 //accessors
 	//dtos
 	public MatchDTO getMatchHistory(Request request){
-		log("SummonerData: Retrieving match history for " + summonerName);
-		log("SummonerData: Retrieving match data [" + request.getRequestStart() + " , " + request.getRequestStop() + ")");
+		log("SummonerData: " + threadName() + " Retrieving match history for " + summonerName);
+		log("SummonerData: " + threadName() + " Retrieving match data [" + request.getRequestStart() + " , " + request.getRequestStop() + ")");
 		
 		int numberOfMatches = request.getRequestStop() - request.getRequestStart(), i = 0;
 		ArrayList<Match> matches = new ArrayList<>(numberOfMatches * 10);
 		ArrayList<MatchReference> matchReferences = new ArrayList<>(numberOfMatches * 10);
 		try{
 			
-			for(i = request.getRequestStart(); i < request.getRequestStop(); i++){
-				log("SummonerData: Match requested -> \n" + matchList.get(i).getGameId() + "\n\n" + Arrays.asList(aggregateMatchData(matchList.get(i), i).replaceAll("PLAYERS", "PLAYERS\n").split("PLAYERS")));
+			for(i = request.getRequestStart(); i < request.getRequestStop()-1; i++){
+				log("SummonerData: " + threadName() + " Match requested -> \n" + matchList.get(i).getGameId() + "\n\n" + Arrays.asList(aggregateMatchData(matchList.get(i), i).replaceAll("PLAYERS", "PLAYERS\n").split("PLAYERS")));
 				matches.add(matchList.get(i));
 				matchReferences.add(matchReferenceList.getMatches().get(i));
 			} return new MatchDTO(matches, matchReferences);
 			
 		} catch(IndexOutOfBoundsException e){
 			e.printStackTrace();
-			log(Level.WARNING, "SummonerData: Match " + i + " not found.", e);
+			log(Level.WARNING, "SummonerData: " + threadName() + " Match " + i + " not found.", e);
 			return null;
 		}
 	}
 	
 	public ProfileDTO getProfile(Request request){ 
-		log("SummonerData: Retrieving profile data for " + summonerName + "...");
+		log("SummonerData: " + threadName() + " Retrieving profile data for " + summonerName + "...");
 		ProfileDTO profile = getProfileSummary();
-		log("SummonerData: Profile -> \n" + profile);
+		log("SummonerData: " + threadName() + " Profile -> \n" + profile);
 		return profile;
 	} 
 	
 	public AnalysisDTO getAnalysis(Request request){
-		log("SummonerData: Retrieving analysis data for " + summonerName);
-		log("SummonerData: Analysis -> \n" + ServerUtilities.mapOfListsToString(rankedChampionDataMap));
+		log("SummonerData: " + threadName() + " Retrieving analysis data for " + summonerName);
+		log("SummonerData: " + threadName() + " Analysis -> \n" + ServerUtilities.mapOfListsToString(rankedChampionDataMap));
 		return new AnalysisDTO(rankedChampionDataMap);
 	}
 	
