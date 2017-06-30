@@ -11,9 +11,12 @@ public class ResponseDTO implements Serializable {
 	private MatchDTO match;
 	private ProfileDTO profile;
 	private AnalysisDTO analysis;
+	private String summonerName;
+	private long summonerId;
 
-	public ResponseDTO() {
-		
+	public ResponseDTO(String summonerName, long id) {
+		this.summonerName = summonerName;
+		this.summonerId = id;
 	}
 
 	/**
@@ -35,6 +38,34 @@ public class ResponseDTO implements Serializable {
 	 */
 	public AnalysisDTO getAnalysis() {
 		return analysis;
+	}
+
+	/**
+	 * @return the summonerName
+	 */
+	public String getSummonerName() {
+		return summonerName;
+	}
+
+	/**
+	 * @return the summonerId
+	 */
+	public long getSummonerId() {
+		return summonerId;
+	}
+
+	/**
+	 * @param summonerName the summonerName to set
+	 */
+	public void setSummonerName(String summonerName) {
+		this.summonerName = summonerName;
+	}
+
+	/**
+	 * @param summonerId the summonerId to set
+	 */
+	public void setSummonerId(long summonerId) {
+		this.summonerId = summonerId;
 	}
 
 	/**
