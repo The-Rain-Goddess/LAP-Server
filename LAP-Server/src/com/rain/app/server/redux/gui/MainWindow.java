@@ -7,10 +7,13 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import com.rain.app.server.redux.Listener;
+import com.rain.app.server.redux.MapListener;
 import com.rain.app.server.redux.ServerRedux;
 import com.rain.app.server.redux.SummonerData;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -46,7 +49,7 @@ import javafx.stage.WindowEvent;
  *
  */
 public class MainWindow extends Application {
-	private static final int WINDOW_MIN_HEIGHT = 700, WINDOW_MIN_WIDTH = 1600;
+	private static final int WINDOW_MIN_HEIGHT = 700, WINDOW_MIN_WIDTH = 1300;
 	private final static Insets DEFAULT_INSETS = new Insets(10,10,10,10);
 	private  WebView browser;
 	private  WebEngine engine;
@@ -185,6 +188,10 @@ public class MainWindow extends Application {
 	public void updateStorageData(){
 		//mainBorderPane.setRight(setStorageData(ServerRedux.getSummonerDataStorageAsList()));
 		
+		//colums
+		table.getColumns().clear();
+		table.getColumns().setAll(getTableColumns());
+		
 		//sort and filter the data
 		SortedList<SummonerData> sortedData = getSortedData(ServerRedux.getSummonerDataStorageAsList());
 		
@@ -202,10 +209,25 @@ public class MainWindow extends Application {
 		controls.setAlignment(Pos.TOP_RIGHT);
 		search = new TextField();
 		Button reload = new Button();
-		reload.setGraphic(new ImageView(new Image("com/rain/app/server/redux/reload32_32.png")));
+		try{
+			reload.setGraphic(new ImageView(new Image("com/rain/app/server/redux/reload32_32.png")));
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		reload.setOnAction((ActionEvent e)->{
 			updateStorageData();
+			
 		});
+		
+		((MapListener<String, SummonerData>)ServerRedux.getSummonerDataStorage()).addListener(new Listener(){
+			@Override
+			public <K> void invoke(K key) {
+				Platform.runLater(()->{
+					updateStorageData();
+				});
+			}
+		});
+		
 		controls.getChildren().addAll(new Label("Search"), search, reload);
 		HBox.setMargin(search, new Insets(0,10,0,10));
 		HBox.setMargin(reload, new Insets(0,5,0,10));
@@ -213,7 +235,7 @@ public class MainWindow extends Application {
 		table = new TableView<SummonerData>();
 		table.setId("Data Table");
 		table.setMinHeight(WINDOW_MIN_HEIGHT - 150);
-		table.setMinWidth(WINDOW_MIN_WIDTH / 4);
+		table.setMinWidth(WINDOW_MIN_WIDTH / 4 + 45);
 		
 		//ititialize columns
 		table.getColumns().setAll(getTableColumns());
