@@ -58,29 +58,33 @@ public class Request implements Serializable {
 	/**
 	 * @param type the type to set
 	 */
-	public void setType(RequestType type) {
+	public Request setType(RequestType type) {
 		this.type = type;
+		return this;
 	}
 
 	/**
 	 * @param summonerName the summonerName to set
 	 */
-	public void setSummonerName(String summonerName) {
+	public Request setSummonerName(String summonerName) {
 		this.summonerName = summonerName;
+		return this;
 	}
 
 	/**
 	 * @param requestStart the requestStart to set
 	 */
-	public void setRequestStart(int requestStart) {
+	public Request setRequestStart(int requestStart) {
 		this.requestStart = requestStart;
+		return this;
 	}
 
 	/**
 	 * @param requestStop the requestStop to set
 	 */
-	public void setRequestStop(int requestStop) {
+	public Request setRequestStop(int requestStop) {
 		this.requestStop = requestStop;
+		return this;
 	}
 	
 	@Override
