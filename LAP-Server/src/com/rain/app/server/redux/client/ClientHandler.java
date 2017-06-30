@@ -80,6 +80,7 @@ public class ClientHandler extends Thread {
 	
 	private void setupRiotApiHandler(){
 		riotApiHandler = new RiotApiHandler(requestedName, Platform.NA);
+		riotApiHandler.prepareRequest(requestFromClient);
 	}
 	
 	private void beginLog(){
@@ -99,7 +100,7 @@ public class ClientHandler extends Thread {
 		log("ClientHandler: Processing client request...");
 		ResponseDTO responseToClient = null;
 		if(requestFromClient.getType() == RequestType.GET){
-			responseToClient = new ResponseDTO();
+			responseToClient = new ResponseDTO(this.requestFromClient.getSummonerName(), riotApiHandler.getSummonerData(requestedName).getSummonerId());
 			responseToClient.setMatch(getMatchHistory());
 			responseToClient.setAnalysis(getAnalysis());
 			responseToClient.setProfile(getProfile());
