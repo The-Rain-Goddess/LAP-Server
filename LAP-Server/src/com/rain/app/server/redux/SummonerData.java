@@ -55,6 +55,21 @@ public class SummonerData implements Serializable{
 		log("SummonerData: " + threadName() + " " + "Constructor called.");
 		this.summonerName = dataDTO.getSummonerName();
 		this.summonerId = dataDTO.getSummonerId();
+		if (dataDTO.getMatch()!=null){
+			this.matchList = dataDTO.getMatch().getMatches();
+			this.matchReferenceList = dataDTO.getMatch().getMatchReferences();
+		} else {
+			this.matchList = new ArrayList<Match>();
+		}
+		
+		if(dataDTO.getAnalysis()!=null){
+			this.rankedChampionDataMap = dataDTO.getAnalysis().getChampionData();
+		}
+		
+		if(dataDTO.getProfile()!=null){
+			this.championMasteryList = dataDTO.getProfile().getMasteries();
+		}
+		
 		log("SummonerData: " + threadName() + " " + summonerName + " was created.");
 	}
 
@@ -207,11 +222,12 @@ public class SummonerData implements Serializable{
 				leagues.add(league);
 			} 
 		} log("SummonerData: " + threadName() + " Profile summary aggregated successfully."); 
-		ProfileDTO profile = new ProfileDTO(leagues, getChampionMasterySummary(5));
+		ProfileDTO profile = new ProfileDTO(leagues, this.championMasteryList);
 		log("SummonerData: " + threadName() + " " + profile);
 		return profile;
 	}
 	
+	@SuppressWarnings("unused")
 	private ArrayList<ChampionMastery> getChampionMasterySummary(int numberOfMasteriesToRetrieve){
 		log("SummonerData: " + threadName() + " Aggregating mastery summary.");
 		ArrayList<ChampionMastery> championMasterySummary = new ArrayList<>();
@@ -301,14 +317,14 @@ public class SummonerData implements Serializable{
 		
 		int numberOfMatches = request.getRequestStop() - request.getRequestStart(), i = 0;
 		ArrayList<Match> matches = new ArrayList<>(numberOfMatches * 10);
-		ArrayList<MatchReference> matchReferences = new ArrayList<>(numberOfMatches * 10);
+		//ArrayList<MatchReference> matchReferences = new ArrayList<>(numberOfMatches * 10);
 		try{
 			
 			for(i = request.getRequestStart(); i < request.getRequestStop()-1; i++){
 				log("SummonerData: " + threadName() + " Match requested -> \n" + matchList.get(i).getGameId() + "\n\n" + Arrays.asList(aggregateMatchData(matchList.get(i), i).replaceAll("PLAYERS", "PLAYERS\n").split("PLAYERS")));
 				matches.add(matchList.get(i));
-				matchReferences.add(matchReferenceList.getMatches().get(i));
-			} return new MatchDTO(matches, matchReferences);
+				//matchReferences.add(matchReferenceList.getMatches().get(i));
+			} return new MatchDTO(matches, matchReferenceList);
 			
 		} catch(IndexOutOfBoundsException e){
 			e.printStackTrace();
