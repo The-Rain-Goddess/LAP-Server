@@ -3,6 +3,9 @@
  */
 package com.rain.app.server.redux.test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.rain.app.service.riot.api.endpoints.match.dto.Match;
 import com.rain.app.service.riot.api.endpoints.match.dto.MatchReference;
 import com.rain.app.service.riot.api.endpoints.match.dto.ParticipantStats;
@@ -49,6 +52,13 @@ public class PredictionMatch {
 	
 	public Team getVictor(){
 		return victor;
+	}
+	
+	public List<RankedPerformanceScore> calculateRankedPerformanceScores(){
+		List<RankedPerformanceScore> scores = new ArrayList<>();
+		for(int i = 0; i < matchDetails.getParticipants().size(); i++){
+			scores.add(new RankedPerformanceScore(matchDetails.getParticipants().get(i)));
+		} return scores;
 	}
 	
 	
