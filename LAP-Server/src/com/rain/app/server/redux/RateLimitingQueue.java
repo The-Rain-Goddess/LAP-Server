@@ -13,16 +13,18 @@ public class RateLimitingQueue extends LinkedBlockingQueue<Runnable>{
     private long dequeueTime;
     private long lastDequeueTime;
     private long timeStamp;
+    private long timeGap;
     private int dequeueCount = 0;
     private boolean firstDQ;
 
-    public RateLimitingQueue(int limit, int dequeueLimit, long dequeueTime, int numberOfThreads) {
+    public RateLimitingQueue(int limit, int dequeueLimit, long dequeueTime, long timeGap, int numberOfThreads) {
         this.limit = limit;
         this.dequeueLimit = dequeueLimit;
         this.dequeueTime = dequeueTime;
         this.timeStamp = System.currentTimeMillis();
         this.lastDequeueTime = System.currentTimeMillis();
         this.dequeueCount = numberOfThreads;
+        this.timeGap = timeGap;
         this.firstDQ = true;
         
         System.err.println("Queue Started: ");
@@ -63,7 +65,7 @@ public class RateLimitingQueue extends LinkedBlockingQueue<Runnable>{
             wait();
         }
     	
-    	while(!isOverSecondGap() || isOverRateLimit()){
+    	while(!isUnderTimeGap() || isOverRateLimit()){
     		
     	}
     	if(firstDQ){
@@ -92,8 +94,8 @@ public class RateLimitingQueue extends LinkedBlockingQueue<Runnable>{
     	} return (dequeueCount>=dequeueLimit);
     }
     
-    public boolean isOverSecondGap(){
-    	 return (System.currentTimeMillis() - lastDequeueTime > 1000L );
+    public boolean isUnderTimeGap(){
+    	 return (System.currentTimeMillis() - lastDequeueTime > timeGap );
     }
 
     @Override
