@@ -210,7 +210,7 @@ public class MainWindow extends Application {
 		search = new TextField();
 		Button reload = new Button();
 		try{
-			reload.setGraphic(new ImageView(new Image("com/rain/app/server/redux/reload32_32.png")));
+			reload.setGraphic(new ImageView(new Image(new File("res/reload.png").toURI().toString())));
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -315,7 +315,7 @@ public class MainWindow extends Application {
 		
 		Button reload = new Button();
 		
-		try{ reload.setGraphic(new ImageView(new Image("com/rain/app/server/redux/reload32_32.png")));}
+		try{ reload.setGraphic(new ImageView(new Image(new File("res/reload.png").toURI().toString())));}
 		catch(Exception e){ e.printStackTrace(); }
 		
 		reload.setOnAction((ActionEvent e)-> {
