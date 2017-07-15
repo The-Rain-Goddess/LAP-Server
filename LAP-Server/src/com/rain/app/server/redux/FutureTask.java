@@ -16,11 +16,25 @@ public class FutureTask<V> implements Callable<V> {
 		this.futureRequest = futureRequest;
 		this.args = args;
 	}
+	
+	private void suspend(int seconds){
+		try{
+			Thread.sleep(seconds * 1000);
+		} catch(InterruptedException e){
+			e.printStackTrace();
+		}
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public V call() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+	public V call() throws IllegalAccessException, IllegalArgumentException{
 		System.out.println("FutureTask: Invoked: " + futureRequest.toGenericString());
-		return (V) futureRequest.invoke(reference, args);
+		try{
+			return (V) futureRequest.invoke(reference, args);
+		} catch(InvocationTargetException e){
+			suspend(1);
+			System.out.println("FutureTask: Service endpoint unavailable, re-requesting...");
+			return call();
+		} 
 	}
 }
