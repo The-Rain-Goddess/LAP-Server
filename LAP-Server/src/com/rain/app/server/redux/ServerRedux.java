@@ -35,7 +35,7 @@ import com.rain.app.service.riot.constant.Platform;
 public class ServerRedux {
 //Package Varriables	
 	private static final Map<String, SummonerData> summonerDataStorage = new MapListener<String, SummonerData>();
-	private static final ExecutorService dataRetrievalPool = new ThreadPoolExecutor(1, 100, 10000L, TimeUnit.MILLISECONDS, new RateLimitingQueue(5000, 8, 10000L, 1));
+	private static final ExecutorService dataRetrievalPool = new ThreadPoolExecutor(1, 100, 10000L, TimeUnit.MILLISECONDS, new RateLimitingQueue(5000, 8, 10000L, 1200L, 1));
 	private static ExecutorService clientHandlerService;
 	private static ChampionList championTranslationList;
 	private static boolean running = true;
@@ -44,9 +44,10 @@ public class ServerRedux {
 	private static ServerSocket ss = null;
 	private static MainWindow gui = null;
 	private static String DATA_DIR = "C:\\LAP-Server\\";
+	public static String API_KEY = "RGAPI-79b21e53-77ee-48d3-b29a-d3610a3515ba";
 	
 //MAIN	
-	public static void main(String[] args) throws IOException{
+	public static void main(String[] args) throws IOException {
 		MyLogger.setup();
 		new ServerRedux().start();
 	}
@@ -195,7 +196,7 @@ public class ServerRedux {
 	public static ChampionList setupChampionDataList(){
 		try {
 			log("Server: " + "[" + Thread.currentThread().getName() + "]" + " Retrieving champion translation list...");
-			return (new RiotApi(new ApiConfig().setKey("RGAPI-1E616A6D-EC4A-46F1-A9BE-E1C620EABB05"))).getDataChampionList(Platform.NA);
+			return (new RiotApi(new ApiConfig().setKey(ServerRedux.API_KEY))).getDataChampionList(Platform.NA);
 		} catch (RiotApiException e1) {
 			e1.printStackTrace();
 			log(Level.SEVERE, "Server: " + "[" + Thread.currentThread().getName() + "]" + " Riot Service unavailable, attempting to get Champion Data List...", e1);
