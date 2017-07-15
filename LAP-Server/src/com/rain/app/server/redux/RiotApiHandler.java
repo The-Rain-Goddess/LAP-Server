@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 import com.rain.app.server.redux.client.Request;
 import com.rain.app.service.riot.api.ApiConfig;
 import com.rain.app.service.riot.api.RiotApi;
-import com.rain.app.service.riot.api.RiotApiException;
 import com.rain.app.service.riot.api.endpoints.champion_mastery.dto.ChampionMasteryList;
 import com.rain.app.service.riot.api.endpoints.league.dto.LeagueList;
 import com.rain.app.service.riot.api.endpoints.match.dto.Match;
@@ -30,7 +29,7 @@ public class RiotApiHandler {
 	private RiotApi api;
 	private long summonerId;
 	private long summonerAccountId;
-	private final String apiKey  = "fb22315c-06cd-4f26-91ed-f0912a72a78d"; //api-key
+	//private final String apiKey  = "fb22315c-06cd-4f26-91ed-f0912a72a78d"; //api-key
 	private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	//private RiotApi api_backup;
 	//private final String apiKey2 = "RGAPI-1E616A6D-EC4A-46F1-A9BE-E1C620EABB05"; //api-key2
@@ -41,7 +40,7 @@ public class RiotApiHandler {
 			log(Level.INFO, "RiotApiHandler: " + threadName() + " Constructor called for summoner " + summonerName + "...");
 			this.summonerName = summonerName;
 			this.platform = platform;
-			this.api = new RiotApi(new ApiConfig().setKey(apiKey));
+			this.api = new RiotApi(new ApiConfig().setKey(ServerRedux.API_KEY));
 			this.summoner = (Summoner) evaluateFromFuture(api.getClass().getMethod("getSummonerByName", Platform.class, String.class), platform, summonerName);
 			this.summonerId = this.summoner.getId();
 			this.summonerAccountId = this.summoner.getAccountId();
@@ -65,19 +64,15 @@ public class RiotApiHandler {
 			return future.get();
 		} catch (ExecutionException e) {
 			e.printStackTrace();
-			Throwable tmp = e.getCause();
-			while(tmp.getCause()!=null){
-				tmp = tmp.getCause();
-			}
-			if(tmp.equals(RiotApiException.class)){
-				System.err.println("Riot Api Exception!!!");
-				suspend(1000L);
-				return evaluateFromFuture(method, args);
-			} else return null;
+			System.err.println("Riot Api Exception!!!");
+			suspend(1000L);
+			return evaluateFromFuture(method, args);
 		} catch(InterruptedException e){
 			e.printStackTrace();
 			return null;
-		}
+		} catch(Exception e){
+			e.printStackTrace();
+		} return null;
 	}
 	
 	private void suspend(long timeout){
