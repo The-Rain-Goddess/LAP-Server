@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import com.rain.app.service.riot.api.endpoints.match.dto.Match;
-import com.rain.app.service.riot.api.endpoints.match.dto.MatchReference;
+import com.rain.app.service.riot.api.endpoints.match.dto.MatchReferenceList;
 
 public class MatchDTO implements Serializable {
 
@@ -13,9 +13,9 @@ public class MatchDTO implements Serializable {
 	 */
 	private static final long serialVersionUID = -1932973421869961217L;
 	private ArrayList<Match> matches;
-	private ArrayList<MatchReference> matchReferences;
+	private MatchReferenceList matchReferences;
 
-	public MatchDTO(ArrayList<Match> matches, ArrayList<MatchReference> matchReferences) {
+	public MatchDTO(ArrayList<Match> matches, MatchReferenceList matchReferences) {
 		this.matches = matches;
 		this.matchReferences = matchReferences;
 	}
@@ -30,7 +30,7 @@ public class MatchDTO implements Serializable {
 	/**
 	 * @return the matchReferences
 	 */
-	public ArrayList<MatchReference> getMatchReferences() {
+	public MatchReferenceList getMatchReferences() {
 		return matchReferences;
 	}
 
@@ -44,7 +44,7 @@ public class MatchDTO implements Serializable {
 	/**
 	 * @param matchReferences the matchReferences to set
 	 */
-	public void setMatchReferences(ArrayList<MatchReference> matchReferences) {
+	public void setMatchReferences(MatchReferenceList matchReferences) {
 		this.matchReferences = matchReferences;
 	}
 

@@ -3,7 +3,7 @@ package com.rain.app.server.redux.dto;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import com.rain.app.service.riot.api.endpoints.champion_mastery.dto.ChampionMastery;
+import com.rain.app.service.riot.api.endpoints.champion_mastery.dto.ChampionMasteryList;
 import com.rain.app.service.riot.api.endpoints.league.dto.LeagueList;
 
 public class ProfileDTO implements Serializable {
@@ -13,9 +13,9 @@ public class ProfileDTO implements Serializable {
 	 */
 	private static final long serialVersionUID = 1690086234753482393L;
 	private ArrayList<LeagueList> leagues;
-	private ArrayList<ChampionMastery> masteries;
+	private ChampionMasteryList masteries;
 
-	public ProfileDTO(ArrayList<LeagueList> leagues, ArrayList<ChampionMastery> masteries) {
+	public ProfileDTO(ArrayList<LeagueList> leagues, ChampionMasteryList masteries) {
 		this.leagues = leagues;
 		this.masteries = masteries;
 	}
@@ -30,7 +30,7 @@ public class ProfileDTO implements Serializable {
 	/**
 	 * @return the masteries
 	 */
-	public ArrayList<ChampionMastery> getMasteries() {
+	public ChampionMasteryList getMasteries() {
 		return masteries;
 	}
 
@@ -44,7 +44,7 @@ public class ProfileDTO implements Serializable {
 	/**
 	 * @param masteries the masteries to set
 	 */
-	public void setMasteries(ArrayList<ChampionMastery> masteries) {
+	public void setMasteries(ChampionMasteryList masteries) {
 		this.masteries = masteries;
 	}
 
