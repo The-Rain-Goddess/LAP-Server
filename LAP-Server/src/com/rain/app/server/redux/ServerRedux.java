@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -44,7 +45,7 @@ public class ServerRedux {
 	private static ServerSocket ss = null;
 	private static MainWindow gui = null;
 	private static String DATA_DIR = "C:\\LAP-Server\\";
-	public static String API_KEY = "RGAPI-79b21e53-77ee-48d3-b29a-d3610a3515ba";
+	public static String API_KEY = "";
 	
 //MAIN	
 	public static void main(String[] args) throws IOException {
@@ -61,6 +62,7 @@ public class ServerRedux {
 	private void start(){
 		try{
 			log("Server: " + threadName() + " is started.");
+			promptApiKey();
 			setupExecutors();
 			setupData();
 			setupServerSocket();
@@ -83,6 +85,15 @@ public class ServerRedux {
 		} finally{
 			shutdownServer();
 		}
+	}
+	
+	private void promptApiKey(){
+		System.out.println("Please Input Api Key for this session...");
+		Scanner kb = new Scanner(System.in);
+		API_KEY = kb.nextLine().trim();
+		System.out.println(API_KEY);
+		kb.close();
+		System.out.println("Thank you Hooman for your input.");
 	}
 	
 	private void setupExecutors(){
