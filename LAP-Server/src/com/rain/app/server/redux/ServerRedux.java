@@ -59,6 +59,7 @@ public class ServerRedux {
 		clientHandlerService = null;
 	}
 	
+//private a/m	
 	private void start(){
 		try{
 			log("Server: " + threadName() + " is started.");
@@ -185,7 +186,6 @@ public class ServerRedux {
 		System.exit(0);
 	}
 
-//private a/m	
 	private String threadName(){
 		return "[" + Thread.currentThread().getName() + "]";
 	}
