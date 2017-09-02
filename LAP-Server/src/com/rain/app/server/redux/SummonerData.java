@@ -240,7 +240,7 @@ public class SummonerData implements Serializable{
 	private TreeMap<Integer, ArrayList<AggregatedChampionData>> updateRankedChampionDataMap(){
 		TreeMap<Integer, ArrayList<AggregatedChampionData>> updatedChampionDataMap = new TreeMap<>();
 		for(int i = 0; i < matchList.size(); i++){
-			for(int j = 0; j < 10; j++){
+			for(int j = 0; j < matchList.get(i).getParticipantIdentities().size(); j++){
 				if(matchList.get(i).getParticipantIdentities().get(j).getPlayer().getSummonerId() == summonerId){
 					Participant player = matchList.get(i).getParticipants().get(j);
 					if(updatedChampionDataMap.containsKey(player.getChampionId())){
