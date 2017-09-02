@@ -44,7 +44,7 @@ public class RateLimitingQueue extends LinkedBlockingQueue<Runnable>{
     
     @Override
     public synchronized boolean offer(Runnable t){
-    	System.err.println("Qp added from " + Thread.currentThread().getName() + ": " +  q.size());
+    	System.err.println("Qp added from thread '" + Thread.currentThread().getName() + "', Current Queue Size: " +  q.size());
     	while (isFull()) {
             try {
 				wait();
