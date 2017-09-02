@@ -105,7 +105,7 @@ public class SummonerData implements Serializable{
 	
 	private String getTeamStats(List<Participant> players, int teamId){
 		double teamDmg = 0, enemyTeamDmg = 0;
-		for(int k = 0; k<10; k++){ //this loop is to get total team dmg and total enemy team dmg
+		for(int k = 0; k<players.size(); k++){ //this loop is to get total team dmg and total enemy team dmg
 			if(players.get(k).getTeamId() == teamId )
 				teamDmg+= (players.get(k).getStats().getTotalDamageDealtToChampions());
 			else
