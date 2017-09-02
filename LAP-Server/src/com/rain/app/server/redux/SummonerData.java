@@ -87,7 +87,7 @@ public class SummonerData implements Serializable{
 	private String aggregateMatchData(Match match, int matchIndex){
 		String aggregatedData = null;
 		List<String> unorderedPlayerList = new ArrayList<>(10);
-		for(int i = 0; i < 10; i++){ //aggregates player data to list
+		for(int i = 0; i < match.getParticipants().size(); i++){ //aggregates player data to list
 			Participant player = match.getParticipants().get(i);
 			Player pIdentity = match.getParticipantIdentities().get(i).getPlayer();
 			String stats = 	getMatchDetails(player.getStats(), matchReferenceList.getMatches().get(matchIndex)) +
