@@ -35,7 +35,7 @@ import com.rain.app.service.riot.constant.Platform;
 public class PredictionTest {
 	
 	RiotApiHandler rHandler = null;
-	static final String KEY = "theraingoddess";
+	static final String KEY = "infernovoire";
 	List<PredictionMatch> matches = new ArrayList<>();
 	
 	private final static Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
@@ -43,7 +43,7 @@ public class PredictionTest {
 	 * 
 	 */
 	public PredictionTest() {
-		rHandler = new RiotApiHandler("theraingoddess", Platform.NA);
+		rHandler = new RiotApiHandler(KEY, Platform.NA);
 	}
 
 	/**
@@ -91,7 +91,7 @@ public class PredictionTest {
 		ResponseDTO response = new ResponseDTO(KEY, rHandler.getSummonerData(KEY).getSummonerId());
 		Request request = new Request(RequestType.GET)
 				.setRequestStart(0)
-					.setRequestStop(20)
+					.setRequestStop(50)
 						.setSummonerName(KEY);
 		if(!ServerRedux.getSummonerDataStorage().containsKey(KEY)){
 			
