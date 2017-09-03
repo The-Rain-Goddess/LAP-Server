@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.rain.app.server.redux.client.Request;
+import com.rain.app.server.redux.client.RequestType;
 import com.rain.app.server.redux.dto.AnalysisDTO;
 import com.rain.app.server.redux.dto.MatchDTO;
 import com.rain.app.server.redux.dto.ProfileDTO;
@@ -315,21 +316,24 @@ public class SummonerData implements Serializable{
 		log("SummonerData: " + threadName() + " Retrieving match history for " + summonerName);
 		log("SummonerData: " + threadName() + " Retrieving match data [" + request.getRequestStart() + " , " + request.getRequestStop() + ")");
 		
-		int numberOfMatches = request.getRequestStop() - request.getRequestStart(), i = 0;
-		ArrayList<Match> matches = new ArrayList<>(numberOfMatches * 10);
-		//ArrayList<MatchReference> matchReferences = new ArrayList<>(numberOfMatches * 10);
-		try{
-			
-			for(i = request.getRequestStart(); i < request.getRequestStop()-1; i++){
-				log("SummonerData: " + threadName() + " Match requested -> \n" + matchList.get(i).getGameId() + "\n\n" + Arrays.asList(aggregateMatchData(matchList.get(i), i).replaceAll("PLAYERS", "PLAYERS\n").split("PLAYERS")));
-				matches.add(matchList.get(i));
-				//matchReferences.add(matchReferenceList.getMatches().get(i));
-			} return new MatchDTO(matches, matchReferenceList);
-			
-		} catch(IndexOutOfBoundsException e){
-			e.printStackTrace();
-			log(Level.WARNING, "SummonerData: " + threadName() + " Match " + i + " not found.", e);
-			return null;
+		if(request.getType() != RequestType.NULL){
+			int numberOfMatches = request.getRequestStop() - request.getRequestStart(), i = 0;
+			ArrayList<Match> matches = new ArrayList<>(numberOfMatches * 10);
+			//ArrayList<MatchReference> matchReferences = new ArrayList<>(numberOfMatches * 10);
+			try{
+				for(i = request.getRequestStart(); i < request.getRequestStop()-1; i++){
+					log("SummonerData: " + threadName() + " Match requested -> \n" + matchList.get(i).getGameId() + "\n\n" + Arrays.asList(aggregateMatchData(matchList.get(i), i).replaceAll("PLAYERS", "PLAYERS\n").split("PLAYERS")));
+					matches.add(matchList.get(i));
+					//matchReferences.add(matchReferenceList.getMatches().get(i));
+				} return new MatchDTO(matches, matchReferenceList);
+				
+			} catch(IndexOutOfBoundsException e){
+				e.printStackTrace();
+				log(Level.WARNING, "SummonerData: " + threadName() + " Match " + i + " not found.", e);
+				return null;
+			}
+		} else{
+			return new MatchDTO(matchList, matchReferenceList);
 		}
 	}
 	
@@ -342,8 +346,16 @@ public class SummonerData implements Serializable{
 	
 	public AnalysisDTO getAnalysis(Request request){
 		log("SummonerData: " + threadName() + " Retrieving analysis data for " + summonerName);
-		log("SummonerData: " + threadName() + " Analysis -> \n" + ServerUtilities.mapOfListsToString(rankedChampionDataMap));
+		if(rankedChampionDataMap != null)
+			log("SummonerData: " + threadName() + " Analysis -> \n" + ServerUtilities.mapOfListsToString(rankedChampionDataMap));
 		return new AnalysisDTO(rankedChampionDataMap);
+	}
+	
+	public ResponseDTO getFullDTO(){
+		return new ResponseDTO(summonerName, summonerId)
+					.setAnalysis(getAnalysis(new Request(RequestType.NULL)))
+					.setMatch(getMatchHistory(new Request(RequestType.NULL)))
+					.setProfile(getProfile(new Request(RequestType.NULL)));
 	}
 	
 	//regular getters
