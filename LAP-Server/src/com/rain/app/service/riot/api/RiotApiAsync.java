@@ -1366,9 +1366,10 @@ public class RiotApiAsync {
 	 * @version 3
 	 * @see MatchReferenceList
 	 */
-	public AsyncRequest getRecentMatchListByAccountId(Platform platform, long accountId) throws RiotApiException {
+	public AsyncRequest getRecentMatchListByAccountId(ApiConfig config, Platform platform, long accountId, Set<Integer> champion, Set<Integer> queue, Set<Integer> season,
+			long beginTime, long endTime, int beginIndex, int endIndex) throws RiotApiException {
 		Objects.requireNonNull(platform);
-		ApiMethod method = new GetRecentMatchListByAccountId(getConfig(), platform, accountId);
+		ApiMethod method = new GetRecentMatchListByAccountId(getConfig(), platform, accountId, champion, queue, season, beginTime, endTime, beginIndex, endIndex);
 		return endpointManager.callMethodAsynchronously(method);
 	}
 
