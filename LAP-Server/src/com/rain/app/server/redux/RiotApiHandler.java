@@ -106,7 +106,7 @@ public class RiotApiHandler {
 	
 	private MatchReferenceList getMatchReferenceList(){
 		try {
-			return (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class), platform, summonerAccountId);
+			return (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class), platform, summonerAccountId, null, null, -1, -1, -1, -1);
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
 		} catch (SecurityException e) {
