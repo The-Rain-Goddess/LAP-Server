@@ -3,8 +3,10 @@ package com.rain.app.server.redux;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -12,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -84,6 +87,7 @@ public class ServerRedux {
 		} catch(Exception e){
 			e.printStackTrace();
 		} finally{
+			writeDataToDisk();
 			shutdownServer();
 		}
 	}
@@ -168,6 +172,30 @@ public class ServerRedux {
 	
 	private void shutdownExecutors(){
 		clientHandlerService.shutdown();
+	}
+	
+	private void writeDataToDisk(){
+		for(Entry<String, SummonerData> entry : summonerDataStorage.entrySet()){
+			ResponseDTO dataToBeWritten = entry.getValue().getFullDTO();
+			try{
+				writeToDisk(dataToBeWritten.getSummonerName(), dataToBeWritten);
+			} catch(IOException e){
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private void writeToDisk(String summoner, ResponseDTO data) throws FileNotFoundException, IOException{
+		File out = new File(ServerRedux.getDATA_DIR());
+		if(new File(ServerRedux.getDATA_DIR() + summoner + ".data").exists())
+			new File(ServerRedux.getDATA_DIR() + summoner + ".data").delete();
+		
+		if(!out.exists())
+			out.mkdirs();
+		
+		ObjectOutputStream o_out = new ObjectOutputStream(new FileOutputStream(ServerRedux.getDATA_DIR() + summoner + ".data"));
+		o_out.writeObject(data);
+		o_out.close();
 	}
 	
 	private void suspend(long millis){
