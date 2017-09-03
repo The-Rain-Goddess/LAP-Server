@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,6 +53,7 @@ public class PredictionTest {
 	public static void main(String[] args) throws IOException {
 		LOGGER.log(Level.INFO, "Begining Prediction Test...");
 		MyLogger.setup();
+		promptApiKey();
 		ServerRedux.setChampionTranslationList(ServerRedux.setupChampionDataList());
 		
 		Executors.newCachedThreadPool().submit(() -> {
@@ -60,6 +62,15 @@ public class PredictionTest {
 		});
 		
 		new PredictionTest().begin();
+	}
+	
+	private static void promptApiKey(){
+		System.out.println("Please Input Api Key for this session...");
+		Scanner kb = new Scanner(System.in);
+		ServerRedux.API_KEY = kb.nextLine().trim();
+		System.out.println(ServerRedux.API_KEY);
+		kb.close();
+		System.out.println("Thank you Hooman for your input.");
 	}
 	
 	public void begin(){
@@ -80,7 +91,7 @@ public class PredictionTest {
 		ResponseDTO response = new ResponseDTO(KEY, rHandler.getSummonerData(KEY).getSummonerId());
 		Request request = new Request(RequestType.GET)
 				.setRequestStart(0)
-					.setRequestStop(300)
+					.setRequestStop(20)
 						.setSummonerName(KEY);
 		if(!ServerRedux.getSummonerDataStorage().containsKey(KEY)){
 			
@@ -139,16 +150,18 @@ public class PredictionTest {
 	private void record(List<RankedPerformanceScore> scores){
 		PrintWriter pw = null;
 		try{
-			File logFile = new File("");
+			System.out.println("Recording results...");
+			File logFile = new File("test\\logFile.log");
 			if(!logFile.exists())
 				logFile.createNewFile();
 			
 			pw = new PrintWriter(new BufferedWriter( new FileWriter(logFile) ));
 			pw.println("[" + new Date().toString() + "]" + " Ranked Performance Scores:");
 			for(int i = 0; i < scores.size(); i++){
-				pw.println(scores.get(i));
+				pw.println(scores.get(i).getValue());
 			}
 			pw.close();
+			System.out.println("Done.");
 		} catch(IOException e){
 			e.printStackTrace();
 		} pw.close();
