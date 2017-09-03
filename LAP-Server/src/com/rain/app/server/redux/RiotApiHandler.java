@@ -191,10 +191,23 @@ public class RiotApiHandler {
 		log("RiotApiHandler: " + threadName() + " Updating old summoner data..." + " for " + summonerName);
 		try {
 			MatchReferenceList updatedMatchReferenceList = getMatchReferenceList();
+			
+			log("RiotApiHandler: " + threadName() + " Updating MatchReferenceList...");
 			updateMatchReferences(updatedMatchReferenceList);
+			log("RiotApiHandler: " + threadName() + " Updated MatchReferenceList.");
+			
+			log("RiotApiHandler: " + threadName() + " Updated Matches...");
 			updateMatches(updatedMatchReferenceList);
+			log("RiotApiHandler: " + threadName() + " Updated Matches.");
+			
+			log("RiotApiHandler: " + threadName() + " Updated Profile Data...");
 			updateProfileData();
+			log("RiotApiHandler: " + threadName() + " Updated Profile Data.");
+			
+			log("RiotApiHandler: " + threadName() + " Updated Ranked Data...");
 			updateRankedData();
+			log("RiotApiHandler: " + threadName() + " Updated Ranked Data.");
+			
 		} catch (NoSuchMethodException | SecurityException e) {
 			e.printStackTrace();
 		}
