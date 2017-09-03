@@ -108,10 +108,8 @@ public class RiotApiHandler {
 		try {
 			return (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class), platform, summonerAccountId);
 		} catch (NoSuchMethodException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} return null;
 	}
