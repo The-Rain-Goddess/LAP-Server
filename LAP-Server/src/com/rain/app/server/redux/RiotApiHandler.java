@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -106,7 +107,7 @@ public class RiotApiHandler {
 	
 	private MatchReferenceList getMatchReferenceList(){
 		try {
-			return (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class), platform, summonerAccountId, null, null, -1, -1, -1, -1);
+			return (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class, Set.class, Set.class, Set.class, long.class, long.class, int.class, int.class), platform, summonerAccountId, null, null, null, -1, -1, -1, -1);
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
 		} catch (SecurityException e) {
