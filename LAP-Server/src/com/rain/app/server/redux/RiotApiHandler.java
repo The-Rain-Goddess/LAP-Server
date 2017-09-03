@@ -107,7 +107,12 @@ public class RiotApiHandler {
 	
 	private MatchReferenceList getMatchReferenceList(){
 		try {
-			return (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class, Set.class, Set.class, Set.class, long.class, long.class, int.class, int.class), platform, summonerAccountId, null, null, null, -1, -1, -1, -1);
+			MatchReferenceList firstCentenial = (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class, Set.class, Set.class, Set.class, long.class, long.class, int.class, int.class), platform, summonerAccountId, null, null, null, -1, -1, -1, -1);
+			MatchReferenceList secondCentenial = (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class, Set.class, Set.class, Set.class, long.class, long.class, int.class, int.class), platform, summonerAccountId, null, null, null, -1, -1, 100, 200);
+			MatchReferenceList thirdCentenial = (MatchReferenceList) evaluateFromFuture(api.getClass().getMethod("getMatchReferenceListByAccountId", Platform.class, long.class, Set.class, Set.class, Set.class, long.class, long.class, int.class, int.class), platform, summonerAccountId, null, null, null, -1, -1, 200, 300);
+			firstCentenial.getMatches().addAll(secondCentenial.getMatches());
+			firstCentenial.getMatches().addAll(thirdCentenial.getMatches());
+			return firstCentenial;
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
 		} catch (SecurityException e) {
