@@ -57,36 +57,41 @@ public class ResponseDTO implements Serializable {
 	/**
 	 * @param summonerName the summonerName to set
 	 */
-	public void setSummonerName(String summonerName) {
+	public ResponseDTO setSummonerName(String summonerName) {
 		this.summonerName = summonerName;
+		return this;
 	}
 
 	/**
 	 * @param summonerId the summonerId to set
 	 */
-	public void setSummonerId(long summonerId) {
+	public ResponseDTO setSummonerId(long summonerId) {
 		this.summonerId = summonerId;
+		return this;
 	}
 
 	/**
 	 * @param match the match to set
 	 */
-	public void setMatch(MatchDTO match) {
+	public ResponseDTO setMatch(MatchDTO match) {
 		this.match = match;
+		return this;
 	}
 
 	/**
 	 * @param profile the profile to set
 	 */
-	public void setProfile(ProfileDTO profile) {
+	public ResponseDTO setProfile(ProfileDTO profile) {
 		this.profile = profile;
+		return this;
 	}
 
 	/**
 	 * @param analysis the analysis to set
 	 */
-	public void setAnalysis(AnalysisDTO analysis) {
+	public ResponseDTO setAnalysis(AnalysisDTO analysis) {
 		this.analysis = analysis;
+		return this;
 	}
 
 }
